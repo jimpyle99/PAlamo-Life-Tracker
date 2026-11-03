@@ -5,6 +5,22 @@ Versions before 1.0 were test builds (0.1.0 to 0.2.3).
 
 The running version is shown at the bottom of the in-app Menu and on the first line of every copied game log.
 
+## [1.3.1] - 2026-11-02
+### Changed
+- The horse armor setting moved from Setup to the bottom of the Menu, in a new "Premium Add-On" section with a "FREE.99" badge and a sales-pitch description. It is still free and still display only. Applies to both pages.
+
+## [1.3.0] - 2026-11-02
+### Added
+- **PAlamo Life Delux**, a second page in the same repo at `delux/index.html`. Same game tracker, with a royal purple and gold look. When the horse armor icon is switched on in Menu, gold dollar signs run down both edges of the screen.
+- Delux keeps its own saved data (separate from the standard page) and shows "PAlamo Life Delux" in the Menu footer and in copied logs.
+
+### Changed
+- The standard page is unchanged apart from the version number. Both pages share one version number and are released together.
+
+## [1.2.0] - 2026-11-02
+### Added
+- Optional horse armor icon next to the moon and Night button. It is display only and off by default. It can only be turned on or off in Menu, under Setup. When it is on, the middle strip uses two rows (icons on top, timer and buttons below) so everything still fits on a phone.
+
 ## [1.1.0] - 2026-11-02
 First release on GitHub. No code changes from 0.2.3; this version number marks the build that goes to testers.
 

@@ -66,6 +66,10 @@ output { display: block; }
 .vt { writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--font-display); font-weight: 800; font-size: 1.15rem; letter-spacing: .12em; line-height: 1; color: var(--moon); white-space: nowrap; }
 .moon { width: 64px; height: 64px; flex: none; color: var(--moon); }
 .moon.off { visibility: hidden; }
+.horse { width: 56px; height: 56px; flex: none; color: #b9c4cc; }
+.strip.two { flex-wrap: wrap; justify-content: center; }
+.strip.two .info { flex: 0 0 100%; }
+.strip.two .rclock { flex: 1; text-align: center; }
 .nightbtn { display: flex; align-items: center; justify-content: center; height: 66px; padding: 0 7px; border: 1px solid var(--moon); border-radius: 10px; background: color-mix(in srgb, var(--moon) 14%, transparent); }
 .nightbtn[aria-pressed="false"] { border-color: var(--line); background: transparent; }
 .nightbtn[aria-pressed="false"] .vt { color: var(--muted); }
@@ -143,6 +147,10 @@ output { display: block; }
 .hint { color: var(--muted); font-size: .85rem; margin: 0; }
 .check { display: flex; gap: 10px; align-items: center; min-height: 44px; }
 .check input { width: 22px; height: 22px; flex: none; }
+.premium .check { align-items: flex-start; padding-block: 6px; line-height: 1.4; }
+.premium .check input { margin-top: 2px; }
+.premium .hint { margin-top: 6px; }
+.price { display: inline-block; padding: 1px 9px; border-radius: 999px; background: var(--moon, #e8e3c4); color: var(--bg); font-family: var(--font-display); font-weight: 800; letter-spacing: .03em; }
 .pal { display: grid; gap: 6px; }
 .pal .who { font-weight: 700; margin-top: 4px; overflow-wrap: anywhere; }
 .swatches { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -180,7 +188,7 @@ output { display: block; }
 
 <div class="app">
   <main class="board" id="board" aria-label="Players"></main>
-  <div class="strip">
+  <div class="strip" id="strip">
     <div class="info" id="turnInfo"></div>
     <output class="rclock" id="roundClock" aria-label="Round timer">30:00</output>
     <button class="btn" data-a="undo" id="undoBtn">Undo</button>
@@ -234,6 +242,11 @@ output { display: block; }
       <div id="games"></div>
       <div class="row"><button class="btn danger" data-a="cleargames" id="clearGames">Clear previous games</button></div>
     </section>
+    <section class="box set premium" aria-labelledby="hhorse">
+      <h2 id="hhorse">Premium Add-On</h2>
+      <label class="check"><input type="checkbox" id="horse"> <span><span class="price">FREE.99</span> <b>Royal Horse Armor Pack!</b> Outfit your screen in battle-ready barding and let every opponent know you play in style. Hand-forged icon, extra-wide display, zero real money. It takes up more of your screen, because you can afford it.</span></label>
+      <p class="hint">Limited time offer: FREE.99 (regular price: also FREE.99). Display only; it adds the horse armor icon next to the moon, and it can only be switched on or off here. You will never be charged.</p>
+    </section>
     <p class="hint" id="ver"></p>
   </div>
 </div>
@@ -241,7 +254,7 @@ output { display: block; }
 <script>
 (function () {
   var KEY = 'pal-duel-tracker-v1';
-  var APP_VERSION = '1.1.0', APP_DATE = '2026-11-02';
+  var APP_VERSION = '1.3.1', APP_DATE = '2026-11-02';
   var S, hist = [], resetArmed = false, clearArmed = false, last = 0, games = [];
   try { games = JSON.parse(localStorage.getItem(KEY + '-games')) || []; } catch (e) { games = []; }
   function logText(g) {
@@ -290,6 +303,7 @@ output { display: block; }
   if (!S.lifeSet) { S.startLife = 10; S.lifeSet = true; }
   if (!S.flipSet) { S.flip = true; S.flipSet = true; }
   if (typeof S.night !== 'boolean') S.night = true;
+  S.horse = !!S.horse;
   if (!S.clock) S.clock = {};
   if (!S.clock.round) { S.clock.minutes = 30; S.clock.ms = 1800000; S.clock.round = true; }
   if (typeof S.clock.minutes !== 'number') S.clock.minutes = 30;
@@ -371,7 +385,8 @@ output { display: block; }
   }
 
   function render() {
-    $('turnInfo').innerHTML = '<svg class="moon' + (S.night ? '' : ' off') + '" viewBox="0 0 24 24" role="img" aria-label="Night"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1" opacity=".25"/><path d="M12 3A9 9 0 0 0 12 21A11 11 0 0 1 12 3Z" fill="currentColor"/></svg>' + '<button class="nightbtn" data-a="night" aria-pressed="' + S.night + '" aria-label="Night mode indicator"><span class="vt">Night</span></button>';
+    $('turnInfo').innerHTML = '<svg class="moon' + (S.night ? '' : ' off') + '" viewBox="0 0 24 24" role="img" aria-label="Night"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1" opacity=".25"/><path d="M12 3A9 9 0 0 0 12 21A11 11 0 0 1 12 3Z" fill="currentColor"/></svg>' + '<button class="nightbtn" data-a="night" aria-pressed="' + S.night + '" aria-label="Night mode indicator"><span class="vt">Night</span></button>' + (S.horse ? '<svg class="horse" viewBox="0 0 48 48" role="img" aria-label="Horse armor"><path d="M10 44 L13 24 L17 12 L19 4 L24 11 L31 15 L39 25 L43 33 L41 38 L34 36 L29 33 L27 44 Z" fill="currentColor"/><path d="M22 10 L32 15 L40 26 L43 33 L38 31 L30 21 L23 16 Z" fill="none" stroke="var(--bg)" stroke-width="1.6" stroke-linejoin="round"/><path d="M26 17 L35 27" stroke="var(--bg)" stroke-width="1.4"/><circle cx="29" cy="24.5" r="1.7" fill="var(--bg)"/><circle cx="41" cy="31" r="1" fill="var(--bg)"/><circle cx="26.5" cy="14" r="1" fill="var(--bg)"/><path d="M14 30 L18 31 M15 36 L19 37 M13 24 L17 25" stroke="var(--bg)" stroke-width="1.4" stroke-linecap="round"/></svg>' : '');
+    $('strip').classList.toggle('two', !!S.horse);
     $('turnInfo').setAttribute('aria-label', 'Night mode');
     $('undoBtn').disabled = hist.length === 0;
     paintRound();
@@ -405,6 +420,7 @@ output { display: block; }
     $('clockBtn').textContent = S.clock.running ? 'Pause' : 'Start';
     if (document.activeElement !== $('clockMin')) $('clockMin').value = S.clock.minutes;
     $('flip').checked = !!S.flip;
+    $('horse').checked = !!S.horse;
     $('resetBtn').textContent = resetArmed ? 'Tap again to confirm' : 'New game';
     $('resetHint').textContent = resetArmed ? 'This clears everything.' : 'Resets life to 10, resets the round timer, and restores Ingredient and Material.';
   }
@@ -456,9 +472,9 @@ output { display: block; }
       S.clock.ms = S.clock.minutes * 60000;
     } else if (a === 'undo') {
       if (!hist.length) return;
-      var keep = S.players.map(function (q) { return { pal: q.pal }; }), ck = S.clock, lay = S.layout, nt = S.night;
+      var keep = S.players.map(function (q) { return { pal: q.pal }; }), ck = S.clock, lay = S.layout, nt = S.night, hs = !!S.horse;
       S = JSON.parse(hist.pop());
-      S.players.forEach(function (q, i) { q.pal = keep[i].pal; }); S.clock = ck; S.layout = lay; S.night = nt;
+      S.players.forEach(function (q, i) { q.pal = keep[i].pal; }); S.clock = ck; S.layout = lay; S.night = nt; S.horse = hs;
     } else if (a === 'addcounter') {
       var n = $('newCounter').value.trim(); if (!n) return;
       snap(); var id = 'c' + Math.random().toString(36).slice(2, 7);
@@ -476,7 +492,7 @@ output { display: block; }
       }
       var names = S.players.map(function (q) { return q.name; }), pals = S.players.map(function (q) { return q.pal; });
       var cs = [{ id: 'ing', name: 'Ingredient' }, { id: 'mat', name: 'Material' }].concat(S.counters.filter(function (x) { return x.id !== 'ing' && x.id !== 'mat'; }));
-      var flip = S.flip, mins = S.clock.minutes, lay = S.layout; S = fresh(10, cs); S.flip = flip; S.layout = lay;
+      var horse = !!S.horse, flip = S.flip, mins = S.clock.minutes, lay = S.layout; S = fresh(10, cs); S.flip = flip; S.layout = lay; S.horse = horse;
       S.clock.minutes = mins; S.clock.ms = mins * 60000; S.players.forEach(function (q, i) { q.name = names[i]; q.pal = pals[i]; });
       $('counterEditor').innerHTML = '';
     }
@@ -491,6 +507,8 @@ output { display: block; }
       snap(); S.counters.forEach(function (c) { if (c.id === t.dataset.rename) c.name = t.value.trim() || c.name; });
     } else if (t.id === 'clockMin') {
       S.clock.minutes = Math.max(1, Math.min(180, parseInt(t.value, 10) || 30));
+    } else if (t.id === 'horse') {
+      S.horse = t.checked;
     } else if (t.id === 'flip') {
       S.flip = t.checked;
     } else return;
