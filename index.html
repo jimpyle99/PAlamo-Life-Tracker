@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>PAlamo Life Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=DM+Sans:wght@400;500;700&display=swap">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<style>
+/* Layout: one-screen app. Player 1 panel on top, a slim control strip in the middle, Player 2 panel below.
+   Each panel is half life, half resource tiles, and everything scales from the panel's own height. */
+:root {
+  --bg: #e9eff2;
+  --surface: #f9fbfc;
+  --surface-2: #dde6ea;
+  --fg: #12262e;
+  --muted: #55707a;
+  --line: #c3d1d7;
+  --danger: #b42318;
+  --pal-neutral: #64748b; --pal-grass: #2f8a2f; --pal-fire: #c2410c; --pal-water: #1d6fb8; --pal-electric: #a16207; --pal-ice: #0e7490; --pal-ground: #8a5a2b; --pal-dark: #4f46a5; --pal-dragon: #be185d;
+  --tok-life: #1d1d24; --tok-mat: #d4572e; --tok-ing: #5a9a16; --tok-gen: #5b6b7d;
+  --res-life: #1d6fb8; --res-ing: #2f8a2f; --res-mat: #c0392b;
+  --font-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
+  --font-body: "DM Sans", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1a1f; --surface: #15262d; --surface-2: #1d3640; --fg: #e4eef1; --muted: #8fa9b3;
+    --line: #2b4651; --danger: #ff8a80;
+    --pal-neutral: #b4bcc8; --pal-grass: #6fd16f; --pal-fire: #f0925a; --pal-water: #5aaaf0; --pal-electric: #f5d442; --pal-ice: #7fe0f5; --pal-ground: #d2a06a; --pal-dark: #a8a0f0; --pal-dragon: #f08ab0;
+    --res-life: #5aaaf0; --res-ing: #6fd16f; --res-mat: #f07a70;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1a1f; --surface: #15262d; --surface-2: #1d3640; --fg: #e4eef1; --muted: #8fa9b3;
+  --line: #2b4651; --danger: #ff8a80;
+  --pal-neutral: #b4bcc8; --pal-grass: #6fd16f; --pal-fire: #f0925a; --pal-water: #5aaaf0; --pal-electric: #f5d442; --pal-ice: #7fe0f5; --pal-ground: #d2a06a; --pal-dark: #a8a0f0; --pal-dragon: #f08ab0;
+  --res-life: #5aaaf0; --res-ing: #6fd16f; --res-mat: #f07a70;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; overflow: hidden;
+  padding-block: 8px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--fg); outline-offset: 2px; }
+output { display: block; }
+
+.app { height: 100%; max-width: 720px; margin-inline: auto; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto minmax(0, 1fr); gap: 8px; }
+.board { display: contents; }
+.panel.p0 { grid-row: 1; } .panel.p1 { grid-row: 3; } .strip { grid-row: 2; }
+.panel, .strip { grid-column: 1; }
+@media (min-width: 721px) and (orientation: landscape) {
+  .app { max-width: 1100px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  .strip { grid-row: 1; grid-column: 1 / -1; }
+  .panel.p0 { grid-row: 2; grid-column: 1; } .panel.p1 { grid-row: 2; grid-column: 2; }
+  .panel.flip { transform: none; }
+}
+
+.btn { min-height: 40px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); font-weight: 700; }
+.btn:hover { background: var(--surface-2); }
+.btn:disabled { opacity: .4; cursor: default; }
+.btn.danger { color: var(--danger); border-color: var(--danger); }
+
+.strip { display: flex; align-items: center; gap: 6px; min-height: 44px; }
+.strip { min-height: 72px; }
+.strip .info { --ac: var(--fg); flex: 1; min-width: 0; height: 72px; display: flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; }
+.info.pal-neutral { --ac: var(--pal-neutral); } .info.pal-grass { --ac: var(--pal-grass); } .info.pal-fire { --ac: var(--pal-fire); }
+.info.pal-water { --ac: var(--pal-water); } .info.pal-electric { --ac: var(--pal-electric); } .info.pal-ice { --ac: var(--pal-ice); }
+.info.pal-ground { --ac: var(--pal-ground); } .info.pal-dark { --ac: var(--pal-dark); } .info.pal-dragon { --ac: var(--pal-dragon); }
+.arrow { width: 22px; height: 22px; flex: none; color: var(--ac); }
+.arrow.dn { transform: rotate(180deg); }
+.vt { writing-mode: vertical-rl; display: block; height: 66px; transform: rotate(180deg); }
+.vt > span { display: block; margin-inline-start: 4px; max-height: 66px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .85rem; }
+.vt .who { font-weight: 700; color: var(--ac); }
+.vt .turnno { color: var(--muted); }
+@media (min-width: 721px) and (orientation: landscape) { .arrow.up { transform: rotate(-90deg); } .arrow.dn { transform: rotate(90deg); } }
+.strip .btn { padding: 0 10px; font-size: .85rem; }
+
+.panel {
+  --c: var(--pal-water);
+  --soft: color-mix(in srgb, var(--c) 16%, var(--surface));
+  container-type: size; display: grid; grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr); gap: 8px;
+  background: var(--surface); border: 2px solid var(--line); border-radius: 16px; padding: 10px; min-height: 0; transition: border-color .15s;
+}
+.panel.active { border-color: var(--c); }
+.panel.flip { transform: rotate(180deg); }
+.panel.pal-neutral { --c: var(--pal-neutral); } .panel.pal-grass { --c: var(--pal-grass); } .panel.pal-fire { --c: var(--pal-fire); }
+.panel.pal-water { --c: var(--pal-water); } .panel.pal-electric { --c: var(--pal-electric); } .panel.pal-ice { --c: var(--pal-ice); }
+.panel.pal-ground { --c: var(--pal-ground); } .panel.pal-dark { --c: var(--pal-dark); } .panel.pal-dragon { --c: var(--pal-dragon); }
+
+.head { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center; }
+.name { min-width: 0; width: 100%; font-family: var(--font-display); font-weight: 800; font-size: 1.1rem; background: transparent; border: 0; border-bottom: 2px solid var(--line); padding: 4px 0; color: var(--c); }
+.clock { font-family: var(--font-display); font-weight: 800; font-size: 1.25rem; font-variant-numeric: tabular-nums; padding: 2px 8px; border-radius: 8px; background: var(--surface-2); color: var(--muted); }
+.panel.active .clock { background: var(--soft); color: var(--c); }
+.panel.active.running .clock { background: var(--c); color: var(--surface); }
+.clock.low { color: var(--danger); }
+.panel.active.running .clock.low { background: var(--danger); color: var(--surface); }
+.endbtn { background: var(--c); color: var(--surface); border-color: var(--c); font-size: .85rem; }
+.endbtn:hover { background: var(--c); filter: brightness(1.08); }
+.endbtn:disabled { background: var(--surface-2); color: var(--muted); border-color: var(--line); opacity: 1; filter: none; }
+
+.disc { display: inline-grid; place-items: center; flex: none; aspect-ratio: 1; border-radius: 50%; width: clamp(22px, 20cqh, 44px); box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .22); }
+.disc svg { width: 64%; height: 64%; }
+.d-life { background: var(--tok-life); color: var(--tok-life); }
+.d-mat { background: var(--tok-mat); color: var(--tok-mat); }
+.d-ing { background: var(--tok-ing); color: var(--tok-ing); }
+.d-gen { background: var(--tok-gen); color: var(--tok-gen); }
+.lab { font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); text-align: center; overflow-wrap: anywhere; }
+
+.life { container-type: size; display: grid; grid-template-columns: minmax(48px, 26%) minmax(0, 1fr) minmax(48px, 26%); gap: 6px; background: var(--soft); border-radius: 14px; min-height: 0; }
+.lbtn { border: 0; background: transparent; color: var(--c); font-size: clamp(2rem, 40cqh, 4rem); line-height: 1; border-radius: 14px; font-weight: 700; }
+.lbtn:hover, .lbtn:active { background: color-mix(in srgb, var(--c) 14%, transparent); }
+.lmid { display: grid; grid-template-rows: auto minmax(0, 1fr); place-items: center; min-height: 0; padding-top: 6px; }
+.lmid .lab { display: flex; align-items: center; gap: 6px; }
+.lmid output { align-self: center; font-family: var(--font-display); font-weight: 800; font-size: clamp(2.6rem, 58cqh, 7rem); line-height: 1; font-variant-numeric: tabular-nums; color: var(--c); }
+.lmid output.low { color: var(--danger); }
+
+.tiles { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; min-height: 0; }
+.tcell { display: grid; grid-template-rows: minmax(0, 1fr) auto; justify-items: center; gap: 2px; min-height: 0; min-width: 0; }
+.tokwrap { container-type: size; width: 100%; height: 100%; display: grid; place-items: center; min-height: 0; }
+.token { container-type: size; position: relative; overflow: hidden; width: min(100cqw, 100cqh); height: min(100cqw, 100cqh); border-radius: 50%; box-shadow: inset 0 0 0 3px rgba(255, 255, 255, .28), 0 2px 0 rgba(0, 0, 0, .18); user-select: none; -webkit-user-select: none; }
+.token::after { content: ""; position: absolute; inset: 7%; border-radius: 50%; border: 1px dashed rgba(255, 255, 255, .35); pointer-events: none; }
+.half { position: absolute; left: 0; right: 0; height: 50%; border: 0; background: transparent; color: #fff; display: flex; justify-content: center; padding: 0; opacity: .9; }
+.half.up { top: 0; align-items: flex-start; padding-top: 7cqh; }
+.half.dn { bottom: 0; align-items: flex-end; padding-bottom: 7cqh; }
+.half:active { background: rgba(255, 255, 255, .2); }
+.half svg { width: 16cqh; height: 16cqh; }
+.tcontent { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1cqh; pointer-events: none; }
+.ticon svg { width: 22cqh; height: 22cqh; display: block; }
+.token output { color: #fff; font-family: var(--font-display); font-weight: 800; font-size: 34cqh; line-height: 1; font-variant-numeric: tabular-nums; }
+
+.sheet { position: fixed; inset: 0; z-index: 20; background: var(--bg); overflow-y: auto;
+  padding-block: calc(12px + env(safe-area-inset-top, 0px)) calc(24px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.sheetin { max-width: 640px; margin-inline: auto; display: grid; gap: 16px; }
+.sheethead { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.sheethead h1 { font-family: var(--font-display); font-weight: 800; font-size: 1.4rem; margin: 0; }
+.box { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; min-width: 0; }
+.box h2 { font-family: var(--font-display); font-size: 1.05rem; margin: 0 0 10px; }
+.log { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; max-height: 220px; overflow-y: auto; font-variant-numeric: tabular-nums; }
+.log li { padding: 6px 0; border-bottom: 1px solid var(--line); }
+.log li:first-child { font-weight: 700; }
+.empty { color: var(--muted); }
+.set { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.row input[type=text], .row input[type=number] { flex: 1; min-width: 0; min-height: 44px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); }
+.row input[type=number] { max-width: 100px; flex: 0 0 100px; }
+.row label { flex: 1; }
+.hint { color: var(--muted); font-size: .85rem; margin: 0; }
+.check { display: flex; gap: 10px; align-items: center; min-height: 44px; }
+.check input { width: 22px; height: 22px; flex: none; }
+.pal { display: grid; gap: 6px; }
+.pal .who { font-weight: 700; margin-top: 4px; overflow-wrap: anywhere; }
+.swatches { display: flex; flex-wrap: wrap; gap: 6px; }
+.sw { display: grid; justify-items: center; gap: 2px; min-width: 56px; min-height: 52px; padding: 6px 4px; border-radius: 8px; border: 2px solid var(--line); background: var(--surface); font-size: .72rem; }
+.sw i { width: 22px; height: 22px; border-radius: 50%; display: block; }
+.sw[aria-pressed="true"] { border-color: var(--fg); font-weight: 700; }
+.s-neutral i { background: var(--pal-neutral); } .s-grass i { background: var(--pal-grass); } .s-fire i { background: var(--pal-fire); }
+.s-water i { background: var(--pal-water); } .s-electric i { background: var(--pal-electric); } .s-ice i { background: var(--pal-ice); }
+.s-ground i { background: var(--pal-ground); } .s-dark i { background: var(--pal-dark); } .s-dragon i { background: var(--pal-dragon); }
+.seg { display: flex; gap: 8px; }
+.seg button { flex: 1; min-height: 48px; border: 2px solid var(--line); border-radius: 10px; background: var(--surface); font-weight: 700; }
+.seg button[aria-pressed="true"] { border-color: var(--fg); }
+.panel.l2 { grid-template-rows: auto minmax(0, 1fr); }
+.row3 { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; min-height: 0; }
+.big.k-life { --c: var(--res-life); } .big.k-ing { --c: var(--res-ing); } .big.k-mat { --c: var(--res-mat); }
+.big { container-type: size; position: relative; overflow: hidden; background: color-mix(in srgb, var(--c) 16%, var(--surface)); border-radius: 18px; min-height: 0; user-select: none; -webkit-user-select: none; }
+.bhalf { position: absolute; left: 0; right: 0; height: 50%; border: 0; background: transparent; color: var(--c); display: flex; justify-content: center; padding: 0; opacity: .8; }
+.bhalf.up { top: 0; align-items: flex-start; padding-top: 4cqh; }
+.bhalf.dn { bottom: 0; align-items: flex-end; padding-bottom: 4cqh; }
+.bhalf:active { background: color-mix(in srgb, var(--c) 18%, transparent); }
+.bhalf svg { width: min(11cqh, 40cqw); height: min(11cqh, 40cqw); }
+.bcontent { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; padding: 14cqh 4px; pointer-events: none; }
+.blab { font-size: clamp(.6rem, 12cqw, .95rem); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--c); text-align: center; overflow-wrap: anywhere; }
+.big output { flex: 1; display: grid; place-items: center; font-family: var(--font-display); font-weight: 800; font-size: min(36cqh, 54cqw); line-height: 1; font-variant-numeric: tabular-nums; color: var(--c); }
+.big output.n3 { font-size: min(28cqh, 38cqw); }
+.big output.low { color: var(--danger); }
+.game { border-bottom: 1px solid var(--line); padding: 4px 0 8px; }
+.game summary { cursor: pointer; display: grid; gap: 2px; min-height: 44px; align-content: center; }
+.game summary span { font-size: .85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.game .log { margin-top: 8px; }
+.copybox { width: 100%; margin-top: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); padding: 8px; font: inherit; font-size: .85rem; user-select: text; -webkit-user-select: text; }
+.log li { user-select: text; -webkit-user-select: text; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="app">
+  <main class="board" id="board" aria-label="Players"></main>
+  <div class="strip">
+    <div class="info" id="turnInfo"></div>
+    <button class="btn" data-a="undo" id="undoBtn">Undo</button>
+    <button class="btn" data-a="clock" id="clockBtn" aria-label="Start or pause the clock">Start</button>
+    <button class="btn" id="themeBtn">Night</button>
+    <button class="btn" data-a="menu">Menu</button>
+  </div>
+</div>
+
+<div class="sheet" id="sheet" role="dialog" aria-label="Menu" hidden>
+  <div class="sheetin">
+    <div class="sheethead">
+      <h1>Menu</h1>
+      <button class="btn" data-a="closemenu">Close</button>
+    </div>
+    <section class="box">
+      <div class="row">
+        <button class="btn danger" data-a="reset" id="resetBtn">New game</button>
+        <span class="hint" id="resetHint">Resets life to 10, resets clocks and turns, and restores Ingredient and Material.</span>
+      </div>
+    </section>
+    <section class="box set" aria-labelledby="hlay">
+      <h2 id="hlay">Layout</h2>
+      <div class="seg" id="layouts"></div>
+      <p class="hint">jaybl🩸🩸d: life bar with round tokens. Icarys: three large tiles for bigger fingers.</p>
+    </section>
+    <section class="box set" aria-labelledby="hset">
+      <h2 id="hset">Setup</h2>
+      <label class="check"><input type="checkbox" id="flip"> Flip Player 1 (top) 180° so the phone can lay flat between you</label>
+      <div id="counterEditor" class="set"></div>
+      <div class="row">
+        <input type="text" id="newCounter" placeholder="New counter, e.g. Pal Souls" aria-label="New counter name">
+        <button class="btn" data-a="addcounter">Add</button>
+      </div>
+      <p class="hint">Counters apply to both players. Renaming keeps each player's values.</p>
+      <div class="pal" id="palettes"></div>
+      <div class="row">
+        <label for="clockMin">Minutes per player</label>
+        <input type="number" id="clockMin" min="1" max="180" inputmode="numeric">
+        <button class="btn" data-a="clockreset">Reset clocks</button>
+      </div>
+      <p class="hint">The clock counts down for the active player. A new time applies after Reset clocks or New game.</p>
+    </section>
+    <section class="box" aria-labelledby="hlog">
+      <h2 id="hlog">History</h2>
+      <ul class="log" id="log"></ul>
+      <div class="row"><button class="btn" data-a="copylog" data-g="cur">Copy log</button></div>
+      <textarea class="copybox" readonly hidden rows="8" aria-label="Log text"></textarea>
+    </section>
+    <section class="box set" aria-labelledby="hgames">
+      <h2 id="hgames">Previous games</h2>
+      <div id="games"></div>
+      <div class="row"><button class="btn danger" data-a="cleargames" id="clearGames">Clear previous games</button></div>
+    </section>
+  </div>
+</div>
+
+<script>
+(function () {
+  var KEY = 'pal-duel-tracker-v1';
+  var S, hist = [], resetArmed = false, clearArmed = false, last = 0, games = [];
+  try { games = JSON.parse(localStorage.getItem(KEY + '-games')) || []; } catch (e) { games = []; }
+  function logText(g) {
+    return 'PAlamo Life Tracker \u2013 ' + stamp(g.t) + '\n' + g.players[0].name + ' ' + g.players[0].life + ' \u2013 ' + g.players[1].life + ' ' + g.players[1].name + ' \u00B7 turn ' + g.turn +
+      '\n\n' + g.log.slice().reverse().join('\n');
+  }
+  function isQuota(e) { return !!e && (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED'); }
+  function saveGames() {
+    var g = games.slice();
+    while (true) {
+      try { localStorage.setItem(KEY + '-games', JSON.stringify(g)); games = g; return; }
+      catch (e) { if (!isQuota(e) || !g.length) return; g.pop(); }
+    }
+  }
+  function stamp(t) { try { return new Date(t).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }); } catch (e) { return new Date(t).toString(); } }
+  var PALS = [['neutral', 'Neutral'], ['grass', 'Grass'], ['fire', 'Fire'], ['water', 'Water'], ['electric', 'Electric'], ['ice', 'Ice'], ['ground', 'Ground'], ['dark', 'Dark'], ['dragon', 'Dragon']];
+  var ICONS = {
+    life: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5C6 16.3 3 13 3 9.6 3 7 5 5 7.4 5c1.8 0 3.4 1 4.6 2.7C13.2 6 14.8 5 16.6 5 19 5 21 7 21 9.6c0 3.4-3 6.7-9 10.9z" fill="#fff"/></svg>',
+    mat: '<svg viewBox="0 0 24 24" aria-hidden="true"><g transform="rotate(-35 12 12)"><rect x="5" y="8.5" width="14" height="7" rx="1.5" fill="#fff"/><ellipse cx="5.5" cy="12" rx="2.6" ry="3.5" fill="#fff" stroke="currentColor" stroke-width="1.2"/><ellipse cx="5.5" cy="12" rx="1" ry="1.5" fill="none" stroke="currentColor" stroke-width="1"/></g></svg>',
+    ing: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="15" r="4.8" fill="#fff"/><circle cx="12" cy="9.8" r="2.9" fill="#fff"/><path d="M12.5 7c.2-1.6 1.2-2.6 3-2.9" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>',
+    gen: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5" fill="#fff"/></svg>'
+  };
+  var CHEV = {
+    up: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 15l7-7 7 7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    dn: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9l7 7 7-7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+  };
+
+  function fresh(startLife, counters) {
+    var cs = counters || [{ id: 'ing', name: 'Ingredient' }, { id: 'mat', name: 'Material' }];
+    return {
+      startLife: startLife, started: Date.now(), turn: 1, active: 0, flip: true, flipSet: true, counters: cs, log: [], lifeSet: true,
+      clock: { minutes: 15, running: false, set: true },
+      players: [0, 1].map(function (i) {
+        var vals = {}; cs.forEach(function (c) { vals[c.id] = 0; });
+        return { name: 'Player ' + (i + 1), life: startLife, vals: vals, ms: 900000, pal: i ? 'fire' : 'water' };
+      })
+    };
+  }
+  try { S = JSON.parse(localStorage.getItem(KEY)); } catch (e) { S = null; }
+  if (!S || !S.players || S.players.length !== 2) S = fresh(10);
+  if (!S.started) S.started = Date.now();
+  S.counters.forEach(function (c) {
+    if (c.id === 'ing' && c.name === 'Ingredients') c.name = 'Ingredient';
+    if (c.id === 'mat' && c.name === 'Materials') c.name = 'Material';
+  });
+  if (!S.lifeSet) { S.startLife = 10; S.lifeSet = true; }
+  if (!S.flipSet) { S.flip = true; S.flipSet = true; }
+  if (!S.clock) S.clock = { minutes: 15, running: false, set: true };
+  if (!S.clock.set) {
+    if (S.players.every(function (p) { return p.ms === 600000; })) S.players.forEach(function (p) { p.ms = 900000; });
+    S.clock.minutes = 15; S.clock.set = true;
+  }
+  S.clock.running = false;
+  if (S.layout !== 2) S.layout = 1;
+  S.players.forEach(function (p, i) {
+    if (typeof p.ms !== 'number') p.ms = S.clock.minutes * 60000;
+    if (!p.pal) p.pal = i ? 'fire' : 'water';
+  });
+
+  function save() {
+    var data = JSON.stringify(S);
+    for (var i = 0; i < 300; i++) {
+      try { localStorage.setItem(KEY, data); return; }
+      catch (e) { if (!isQuota(e) || !games.length) return; games.pop(); saveGames(); }
+    }
+  }
+  function snap() { hist.push(JSON.stringify(S)); if (hist.length > 60) hist.shift(); }
+  function logit(t) { S.log.unshift(t); S.log = S.log.slice(0, 2000); }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function sgn(d) { return (d > 0 ? '+' : '−') + Math.abs(d); }
+  var $ = function (id) { return document.getElementById(id); };
+
+  function fmt(ms) { var s = Math.ceil(ms / 1000); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
+  function clockCls(p) { return p.ms <= 30000 ? ' low' : ''; }
+  function accrue() {
+    if (!S.clock.running) return;
+    var now = Date.now(), p = S.players[S.active];
+    p.ms = Math.max(0, p.ms - (now - last)); last = now;
+  }
+  function paintClocks() {
+    S.players.forEach(function (p, i) {
+      var el = document.querySelector('[data-clock="' + i + '"]');
+      if (el) { el.textContent = fmt(p.ms); el.className = 'clock' + clockCls(p); }
+    });
+  }
+  setInterval(function () {
+    if (!S.clock.running) return;
+    accrue();
+    var p = S.players[S.active];
+    if (p.ms === 0) { S.clock.running = false; logit(p.name + ' is out of time'); save(); render(); return; }
+    save(); paintClocks();
+  }, 250);
+
+  function half(p, c, dir, d, lab) {
+    return '<button class="half ' + dir + '" data-a="cnt" data-p="' + p + '" data-c="' + c.id + '" data-d="' + d + '" aria-label="' + lab + ' ' + esc(c.name) + '">' + CHEV[dir] + '</button>';
+  }
+  function bigTile(label, val, up, dn, low, kind) {
+    var cls = (String(val).length >= 3 ? 'n3 ' : '') + (low ? 'low' : '');
+    return '<div class="big' + (kind ? ' k-' + kind : '') + '"><button class="bhalf up" ' + up + '>' + CHEV.up + '</button><button class="bhalf dn" ' + dn + '>' + CHEV.dn + '</button>' +
+      '<div class="bcontent"><span class="blab">' + esc(label) + '</span><output aria-live="polite" class="' + cls.trim() + '">' + val + '</output></div></div>';
+  }
+  function panel2(p, i) {
+    var at = function (a, extra, d, lab) { return 'data-a="' + a + '" data-p="' + i + '"' + extra + ' data-d="' + d + '" aria-label="' + esc(lab) + '"'; };
+    var tiles = bigTile('Life', p.life, at('life', '', 1, 'Gain 1 life'), at('life', '', -1, 'Lose 1 life'), p.life <= 5, 'life');
+    S.counters.forEach(function (c) {
+      var x = ' data-c="' + c.id + '"';
+      tiles += bigTile(c.name, p.vals[c.id] || 0, at('cnt', x, 1, 'Add one ' + c.name), at('cnt', x, -1, 'Remove one ' + c.name), false, c.id === 'mat' ? 'mat' : c.id === 'ing' ? 'ing' : '');
+    });
+    return '<section class="panel l2 p' + i + ' pal-' + p.pal + (S.active === i ? ' active' : '') + (S.flip && i === 0 ? ' flip' : '') + (S.clock.running ? ' running' : '') + '">' +
+      '<div class="head"><input class="name" data-name="' + i + '" value="' + esc(p.name) + '" aria-label="Player ' + (i + 1) + ' name" maxlength="24">' +
+      '<output class="clock' + clockCls(p) + '" data-clock="' + i + '">' + fmt(p.ms) + '</output>' +
+      '<button class="btn endbtn" data-a="endturn" data-p="' + i + '"' + (S.active === i ? '' : ' disabled') + '>End turn</button></div>' +
+      '<div class="row3">' + tiles + '</div></section>';
+  }
+  function panelHTML(p, i) {
+    if (S.layout === 2) return panel2(p, i);
+    var tiles = S.counters.map(function (c) {
+      var k = c.id === 'mat' ? 'mat' : c.id === 'ing' ? 'ing' : 'gen';
+      return '<div class="tcell"><div class="tokwrap"><div class="token d-' + k + '">' +
+        half(i, c, 'up', 1, 'Add one') + half(i, c, 'dn', -1, 'Remove one') +
+        '<div class="tcontent"><span class="ticon">' + ICONS[k] + '</span><output aria-live="polite">' + (p.vals[c.id] || 0) + '</output></div></div></div>' +
+        '<span class="lab">' + esc(c.name) + '</span></div>';
+    }).join('');
+    return '<section class="panel p' + i + ' pal-' + p.pal + (S.active === i ? ' active' : '') + (S.flip && i === 0 ? ' flip' : '') + (S.clock.running ? ' running' : '') + '">' +
+      '<div class="head"><input class="name" data-name="' + i + '" value="' + esc(p.name) + '" aria-label="Player ' + (i + 1) + ' name" maxlength="24">' +
+      '<output class="clock' + clockCls(p) + '" data-clock="' + i + '">' + fmt(p.ms) + '</output>' +
+      '<button class="btn endbtn" data-a="endturn" data-p="' + i + '"' + (S.active === i ? '' : ' disabled') + '>End turn</button></div>' +
+      '<div class="life"><button class="lbtn" data-a="life" data-p="' + i + '" data-d="-1" aria-label="Lose 1 life">−</button>' +
+      '<div class="lmid"><div class="lab"><span class="disc d-life">' + ICONS.life + '</span>Life</div><output aria-live="polite" class="' + (p.life <= 5 ? 'low' : '') + '">' + p.life + '</output></div>' +
+      '<button class="lbtn" data-a="life" data-p="' + i + '" data-d="1" aria-label="Gain 1 life">+</button></div>' +
+      '<div class="tiles">' + tiles + '</div></section>';
+  }
+
+  function render() {
+    var ap = S.players[S.active];
+    $('turnInfo').className = 'info pal-' + ap.pal;
+    $('turnInfo').innerHTML = '<svg class="arrow ' + (S.active === 0 ? 'up' : 'dn') + '" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l8 10H4z" fill="currentColor"/><rect x="9.5" y="13" width="5" height="7" rx="1" fill="currentColor"/></svg>' +
+      '<div class="vt"><span class="who">' + esc(ap.name) + '</span><span class="turnno">Turn ' + S.turn + '</span></div>';
+    $('turnInfo').setAttribute('aria-label', ap.name + ' to act, turn ' + S.turn);
+    $('undoBtn').disabled = hist.length === 0;
+    $('board').innerHTML = S.players.map(panelHTML).join('');
+
+    $('log').innerHTML = S.log.length
+      ? S.log.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('')
+      : '<li class="empty">No changes yet. Adjust life or a counter to start the log.</li>';
+
+    var ed = $('counterEditor');
+    if (!ed.contains(document.activeElement)) {
+      ed.innerHTML = S.counters.map(function (c) {
+        return '<div class="row"><input type="text" data-rename="' + c.id + '" value="' + esc(c.name) + '" aria-label="Counter name" maxlength="24">' +
+          '<button class="btn" data-a="delcounter" data-c="' + c.id + '" aria-label="Remove counter ' + esc(c.name) + '">Remove</button></div>';
+      }).join('');
+    }
+    $('palettes').innerHTML = S.players.map(function (p, i) {
+      return '<div class="who">' + esc(p.name) + ' color</div><div class="swatches">' + PALS.map(function (x) {
+        return '<button class="sw s-' + x[0] + '" data-a="pal" data-p="' + i + '" data-pal="' + x[0] + '" aria-pressed="' + (p.pal === x[0]) + '"><i></i>' + x[1] + '</button>';
+      }).join('') + '</div>';
+    }).join('');
+    $('layouts').innerHTML = [1, 2].map(function (n) {
+      return '<button data-a="layout" data-l="' + n + '" aria-pressed="' + ((S.layout || 1) === n) + '">' + ['jaybl\uD83E\uDE78\uD83E\uDE78d', 'Icarys'][n - 1] + '</button>';
+    }).join('');
+    $('games').innerHTML = games.length ? games.map(function (g, gi) {
+      return '<details class="game"><summary><b>' + esc(stamp(g.t)) + '</b><span>' + esc(g.players[0].name) + ' ' + g.players[0].life + ' \u2013 ' + g.players[1].life + ' ' + esc(g.players[1].name) + ' \u00B7 ' + g.turn + (g.turn === 1 ? ' turn' : ' turns') + '</span></summary>' +
+        '<ul class="log">' + g.log.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul><div class="row"><button class="btn" data-a="copylog" data-g="' + gi + '">Copy log</button></div><textarea class="copybox" readonly hidden rows="8" aria-label="Log text"></textarea></details>';
+    }).join('') : '<p class="empty">No saved games yet. The log of each game is saved here when you tap New game.</p>';
+    $('clearGames').hidden = !games.length;
+    $('clearGames').textContent = clearArmed ? 'Tap again to confirm' : 'Clear previous games';
+    $('clockBtn').textContent = S.clock.running ? 'Pause' : 'Start';
+    if (document.activeElement !== $('clockMin')) $('clockMin').value = S.clock.minutes;
+    $('flip').checked = !!S.flip;
+    $('resetBtn').textContent = resetArmed ? 'Tap again to confirm' : 'New game';
+    $('resetHint').textContent = resetArmed ? 'This clears everything.' : 'Resets life to 10, resets clocks and turns, and restores Ingredient and Material.';
+  }
+
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-a]'); if (!b) return;
+    var a = b.dataset.a, p = S.players[+b.dataset.p], d = +b.dataset.d;
+    if (a === 'menu') { $('sheet').hidden = false; $('sheet').scrollTop = 0; return; }
+    if (a === 'closemenu') { $('sheet').hidden = true; return; }
+    if (a === 'copylog') {
+      var g = b.dataset.g === 'cur' ? { t: S.started, turn: S.turn, players: S.players, log: S.log } : games[+b.dataset.g];
+      if (!g) return;
+      var text = logText(g), ta = b.parentElement.nextElementSibling, orig = b.dataset.label || b.textContent;
+      b.dataset.label = orig;
+      var ok = function () { b.textContent = 'Copied'; if (ta) ta.hidden = true; setTimeout(function () { b.textContent = orig; }, 1500); };
+      var fail = function () {
+        if (!ta) return;
+        ta.hidden = false; ta.value = text; ta.focus(); ta.select();
+        try { ta.setSelectionRange(0, text.length); } catch (e) {}
+        b.textContent = 'Copy from the box below';
+      };
+      try { navigator.clipboard.writeText(text).then(ok, fail); } catch (e) { fail(); }
+      return;
+    }
+    if (a !== 'reset' && resetArmed) resetArmed = false;
+    if (a !== 'cleargames' && clearArmed) clearArmed = false;
+    accrue();
+    if (a === 'life') {
+      snap(); p.life += d; logit(p.name + ' life ' + sgn(d) + ' → ' + p.life);
+    } else if (a === 'cnt') {
+      var c = S.counters.filter(function (x) { return x.id === b.dataset.c; })[0];
+      var nv = Math.max(0, (p.vals[c.id] || 0) + d);
+      if (nv === (p.vals[c.id] || 0)) return;
+      snap(); p.vals[c.id] = nv; logit(p.name + ' ' + c.name + ' ' + sgn(d) + ' → ' + nv);
+    } else if (a === 'endturn') {
+      snap(); S.active = 1 - S.active; if (S.active === 0) S.turn++;
+      logit('Turn ' + S.turn + ': ' + S.players[S.active].name + ' to act');
+    } else if (a === 'cleargames') {
+      if (!clearArmed) { clearArmed = true; render(); return; }
+      clearArmed = false; games = []; saveGames();
+    } else if (a === 'layout') {
+      S.layout = +b.dataset.l === 2 ? 2 : 1;
+    } else if (a === 'pal') {
+      p.pal = b.dataset.pal;
+    } else if (a === 'clock') {
+      if (S.clock.running) { S.clock.running = false; }
+      else if (S.players[S.active].ms > 0) { S.clock.running = true; last = Date.now(); }
+    } else if (a === 'clockreset') {
+      S.clock.running = false;
+      S.players.forEach(function (q) { q.ms = S.clock.minutes * 60000; });
+    } else if (a === 'undo') {
+      if (!hist.length) return;
+      var keep = S.players.map(function (q) { return { ms: q.ms, pal: q.pal }; }), ck = S.clock, lay = S.layout;
+      S = JSON.parse(hist.pop());
+      S.players.forEach(function (q, i) { q.ms = keep[i].ms; q.pal = keep[i].pal; }); S.clock = ck; S.layout = lay;
+    } else if (a === 'addcounter') {
+      var n = $('newCounter').value.trim(); if (!n) return;
+      snap(); var id = 'c' + Math.random().toString(36).slice(2, 7);
+      S.counters.push({ id: id, name: n }); S.players.forEach(function (q) { q.vals[id] = 0; });
+      $('newCounter').value = ''; $('counterEditor').innerHTML = '';
+    } else if (a === 'delcounter') {
+      snap(); S.counters = S.counters.filter(function (x) { return x.id !== b.dataset.c; });
+      $('counterEditor').innerHTML = '';
+    } else if (a === 'reset') {
+      if (!resetArmed) { resetArmed = true; render(); return; }
+      resetArmed = false; hist = [];
+      if (S.log.length) {
+        games.unshift({ t: S.started, end: Date.now(), turn: S.turn, players: S.players.map(function (q) { return { name: q.name, life: q.life }; }), log: S.log });
+        games = games.slice(0, 200); saveGames();
+      }
+      var names = S.players.map(function (q) { return q.name; }), pals = S.players.map(function (q) { return q.pal; });
+      var cs = [{ id: 'ing', name: 'Ingredient' }, { id: 'mat', name: 'Material' }].concat(S.counters.filter(function (x) { return x.id !== 'ing' && x.id !== 'mat'; }));
+      var flip = S.flip, mins = S.clock.minutes, lay = S.layout; S = fresh(10, cs); S.flip = flip; S.layout = lay;
+      S.clock.minutes = mins; S.players.forEach(function (q, i) { q.ms = mins * 60000; q.name = names[i]; q.pal = pals[i]; });
+      $('counterEditor').innerHTML = '';
+    }
+    save(); render();
+  });
+
+  document.addEventListener('change', function (e) {
+    var t = e.target;
+    if (t.dataset.name !== undefined) {
+      snap(); S.players[+t.dataset.name].name = t.value.trim() || 'Player ' + (+t.dataset.name + 1);
+    } else if (t.dataset.rename) {
+      snap(); S.counters.forEach(function (c) { if (c.id === t.dataset.rename) c.name = t.value.trim() || c.name; });
+    } else if (t.id === 'clockMin') {
+      S.clock.minutes = Math.max(1, Math.min(180, parseInt(t.value, 10) || 15));
+    } else if (t.id === 'flip') {
+      S.flip = t.checked;
+    } else return;
+    save(); render();
+  });
+
+  $('newCounter').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') document.querySelector('[data-a="addcounter"]').click();
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') $('sheet').hidden = true; });
+
+  function curTheme() {
+    var t = document.documentElement.getAttribute('data-theme');
+    if (t) return t;
+    return window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  function paintTheme() { $('themeBtn').textContent = curTheme() === 'dark' ? 'Day' : 'Night'; }
+  try { var th = localStorage.getItem(KEY + '-theme'); if (th) document.documentElement.setAttribute('data-theme', th); } catch (e) {}
+  $('themeBtn').addEventListener('click', function () {
+    var n = curTheme() === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', n);
+    try { localStorage.setItem(KEY + '-theme', n); } catch (e) {}
+    paintTheme();
+  });
+  paintTheme();
+
+  render();
+})();
+</script>
+</body>
+</html>
