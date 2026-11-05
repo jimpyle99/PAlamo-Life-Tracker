@@ -5,6 +5,10 @@ Versions before 1.0 were test builds (0.1.0 to 0.2.3).
 
 The running version is shown at the bottom of the in-app Menu and on the first line of every copied game log.
 
+## [1.8.0] - 2026-11-05
+### Added
+- **QR code at the bottom of the Menu** ("Share this app") that opens the GitHub Pages site, so someone next to you can scan it to load the app. The standard page links to `https://jimpyle99.github.io/PAlamo-Life-Tracker/` and Delux links to the same address plus `delux/`. The code is a fixed image built into the page, so it works offline and adds no script or library (about 2.5 KB).
+
 ## [1.7.0] - 2026-11-05
 ### Changed
 - **Night is off by default.** New games and fresh installs start with no moon; tap the Night button to show it. Existing saved games keep whatever Night setting they already had.
