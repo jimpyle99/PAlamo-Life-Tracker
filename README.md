@@ -15,6 +15,9 @@ Saved games and settings are kept in each person's own browser. Nothing is sent 
 
 Both pages share one version number. When you change the standard page, ask for the Delux page to be rebuilt too so the two stay in step.
 
+## Fonts
+The fonts (DM Sans, Bricolage Grotesque) are stored in `fonts/` and loaded from there, so the app makes no requests to Google. Both are licensed under the SIL Open Font License; the license texts are in the same folder.
+
 ## Version
 The current version is at the top of [CHANGELOG.md](CHANGELOG.md) and at the bottom of the in-app Menu.
 Please include it when reporting a problem.

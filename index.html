@@ -6,13 +6,16 @@
 <title>PAlamo Life Tracker</title>
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#0e1a1f">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=DM+Sans:wght@400;500;700&display=swap">
+<link rel="preload" href="fonts/dm-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/dm-sans-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/bricolage-grotesque-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>:root{color-scheme:dark;background:#0e1a1f;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 </head>
 <body>
 <style>
+@font-face { font-family: "DM Sans"; font-style: normal; font-weight: 400; font-display: swap; src: url(fonts/dm-sans-latin-400-normal.woff2) format("woff2"); }
+@font-face { font-family: "DM Sans"; font-style: normal; font-weight: 700; font-display: swap; src: url(fonts/dm-sans-latin-700-normal.woff2) format("woff2"); }
+@font-face { font-family: "Bricolage Grotesque"; font-style: normal; font-weight: 800; font-display: swap; src: url(fonts/bricolage-grotesque-latin-800-normal.woff2) format("woff2"); }
 * { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 /* Layout: one-screen app. Player 1 panel on top, a slim control strip in the middle, Player 2 panel below.
    Each panel is half life, half resource tiles, and everything scales from the panel's own height. */
@@ -57,19 +60,19 @@ output { display: block; }
 .btn:disabled { opacity: .4; cursor: default; }
 .btn.danger { color: var(--danger); border-color: var(--danger); }
 
-.strip { display: flex; align-items: center; gap: 6px; min-height: 44px; }
-.strip { min-height: 72px; }
-.strip .info { --ac: var(--fg); flex: 1; min-width: 0; height: 72px; display: flex; align-items: center; justify-content: center; gap: 8px; font-variant-numeric: tabular-nums; }
-.info.pal-neutral { --ac: var(--pal-neutral); } .info.pal-grass { --ac: var(--pal-grass); } .info.pal-fire { --ac: var(--pal-fire); }
-.info.pal-water { --ac: var(--pal-water); } .info.pal-electric { --ac: var(--pal-electric); } .info.pal-ice { --ac: var(--pal-ice); }
-.info.pal-ground { --ac: var(--pal-ground); } .info.pal-dark { --ac: var(--pal-dark); } .info.pal-dragon { --ac: var(--pal-dragon); }
+.strip { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 6px; }
+.strip .rwrap { grid-column: 1; grid-row: 1; justify-self: start; }
+.strip .info { grid-column: 2; grid-row: 1; }
+.strip .rollbtn { grid-column: 3; grid-row: 1; justify-self: end; }
+.strip .sr { grid-column: 1 / -1; grid-row: 2; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.strip .sr .btn { width: 100%; }
+.rwrap { display: grid; place-items: center; }
+.rwrap .rclock { writing-mode: vertical-rl; transform: rotate(180deg); font-size: 1.1rem; padding: 6px 3px; }
+.strip .info { --ac: var(--fg); min-width: 0; height: 66px; display: flex; align-items: center; justify-content: center; gap: 8px; font-variant-numeric: tabular-nums; }
 .vt { writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--font-display); font-weight: 800; font-size: 1.15rem; letter-spacing: .12em; line-height: 1; color: var(--moon); white-space: nowrap; }
-.moon { width: 64px; height: 64px; flex: none; color: var(--moon); }
+.moon { width: 64px; height: auto; aspect-ratio: 1; flex: 0 1 auto; min-width: 26px; color: var(--moon); }
 .moon.off { visibility: hidden; }
 .horse { width: 56px; height: 56px; flex: none; color: #b9c4cc; }
-.strip.two { flex-wrap: wrap; justify-content: center; }
-.strip.two .info { flex: 0 0 100%; }
-.strip.two .rclock { flex: 1; text-align: center; }
 .nightbtn { display: flex; align-items: center; justify-content: center; height: 66px; padding: 0 7px; border: 1px solid var(--moon); border-radius: 10px; background: color-mix(in srgb, var(--moon) 14%, transparent); }
 .nightbtn[aria-pressed="false"] { border-color: var(--line); background: transparent; }
 .nightbtn[aria-pressed="false"] .vt { color: var(--muted); }
@@ -79,9 +82,8 @@ output { display: block; }
   --c: var(--pal-water);
   --soft: color-mix(in srgb, var(--c) 16%, var(--surface));
   container-type: size; display: grid; grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr); gap: 8px;
-  background: var(--surface); border: 2px solid var(--line); border-radius: 16px; padding: 10px; min-height: 0; transition: border-color .15s;
+  background: var(--surface); border: 2px solid var(--line); border-radius: 16px; padding: 10px; min-height: 0;
 }
-.panel.active { border-color: var(--c); }
 .panel.flip { transform: rotate(180deg); }
 .panel.pal-neutral { --c: var(--pal-neutral); } .panel.pal-grass { --c: var(--pal-grass); } .panel.pal-fire { --c: var(--pal-fire); }
 .panel.pal-water { --c: var(--pal-water); } .panel.pal-electric { --c: var(--pal-electric); } .panel.pal-ice { --c: var(--pal-ice); }
@@ -93,9 +95,6 @@ output { display: block; }
 .rclock.running { background: var(--moon); color: var(--bg); }
 .rclock.low { color: var(--danger); }
 .rclock.running.low { background: var(--danger); color: var(--bg); }
-.endbtn { background: var(--c); color: var(--surface); border-color: var(--c); font-size: .85rem; }
-.endbtn:hover { background: var(--c); filter: brightness(1.08); }
-.endbtn:disabled { background: var(--surface-2); color: var(--muted); border-color: var(--line); opacity: 1; filter: none; }
 
 .disc { display: inline-grid; place-items: center; flex: none; aspect-ratio: 1; border-radius: 50%; width: clamp(22px, 20cqh, 44px); box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .22); }
 .disc svg { width: 64%; height: 64%; }
@@ -183,17 +182,33 @@ output { display: block; }
 .game .log { margin-top: 8px; }
 .copybox { width: 100%; margin-top: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); padding: 8px; font: inherit; font-size: .85rem; user-select: text; -webkit-user-select: text; }
 .log li { user-select: text; -webkit-user-select: text; }
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+.strip .rollbtn { width: 58px; height: 58px; padding: 0; display: grid; place-items: center; border-radius: 12px; }
+.strip .rollbtn svg { width: 38px; height: 38px; }
+.roll { position: fixed; inset: 0; z-index: 25; display: grid; place-items: center; background: rgba(0, 0, 0, .6); padding: 16px; }
+.roll[hidden] { display: none; }
+.rollcard { background: var(--surface); color: var(--fg); border: 2px solid var(--moon); border-radius: 18px; padding: 18px; display: grid; justify-items: center; text-align: center; cursor: pointer; max-width: min(92vw, 420px); }
+.dice { display: flex; gap: 14px; }
+.die { width: 84px; height: 84px; display: block; }
 </style>
 
 <div class="app">
   <main class="board" id="board" aria-label="Players"></main>
   <div class="strip" id="strip">
+    <div class="rwrap"><output class="rclock" id="roundClock" aria-label="Round timer">30:00</output></div>
     <div class="info" id="turnInfo"></div>
-    <output class="rclock" id="roundClock" aria-label="Round timer">30:00</output>
-    <button class="btn" data-a="undo" id="undoBtn">Undo</button>
-    <button class="btn" data-a="clock" id="clockBtn" aria-label="Start or pause the round timer">Start</button>
-    <button class="btn" data-a="menu">Menu</button>
+    <button class="btn rollbtn" data-a="roll" aria-label="Roll two six-sided dice"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="display:block"><rect x="3" y="3" width="18" height="18" rx="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="8.5" cy="8.5" r="1.7" fill="currentColor"/><circle cx="12" cy="12" r="1.7" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.7" fill="currentColor"/></svg></button>
+    <div class="sr">
+      <button class="btn" data-a="clock" id="clockBtn" aria-label="Start or pause the round timer">Start</button>
+      <button class="btn" data-a="undo" id="undoBtn">Undo</button>
+      <button class="btn" data-a="menu">Menu</button>
+    </div>
+  </div>
+</div>
+
+<div class="roll" id="roll" data-a="rollclose" role="dialog" aria-label="Dice roll" hidden>
+  <div class="rollcard" data-a="rollagain">
+    <div class="dice" id="dice"></div>
+    <span id="rollLive" role="status" aria-live="polite" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)"></span>
   </div>
 </div>
 
@@ -254,7 +269,7 @@ output { display: block; }
 <script>
 (function () {
   var KEY = 'pal-duel-tracker-v1';
-  var APP_VERSION = '1.3.1', APP_DATE = '2026-11-02';
+  var APP_VERSION = '1.7.0', APP_DATE = '2026-11-02';
   var S, hist = [], resetArmed = false, clearArmed = false, last = 0, games = [];
   try { games = JSON.parse(localStorage.getItem(KEY + '-games')) || []; } catch (e) { games = []; }
   function logText(g) {
@@ -285,7 +300,7 @@ output { display: block; }
   function fresh(startLife, counters) {
     var cs = counters || [{ id: 'ing', name: 'Ingredient' }, { id: 'mat', name: 'Material' }];
     return {
-      startLife: startLife, started: Date.now(), night: true, turn: 1, active: 0, flip: true, flipSet: true, counters: cs, log: [], lifeSet: true,
+      startLife: startLife, started: Date.now(), night: false, flip: true, flipSet: true, counters: cs, log: [], lifeSet: true,
       clock: { minutes: 30, ms: 1800000, running: false, round: true },
       players: [0, 1].map(function (i) {
         var vals = {}; cs.forEach(function (c) { vals[c.id] = 0; });
@@ -302,8 +317,9 @@ output { display: block; }
   });
   if (!S.lifeSet) { S.startLife = 10; S.lifeSet = true; }
   if (!S.flipSet) { S.flip = true; S.flipSet = true; }
-  if (typeof S.night !== 'boolean') S.night = true;
+  if (typeof S.night !== 'boolean') S.night = false;
   S.horse = !!S.horse;
+  delete S.turn; delete S.active;
   if (!S.clock) S.clock = {};
   if (!S.clock.round) { S.clock.minutes = 30; S.clock.ms = 1800000; S.clock.round = true; }
   if (typeof S.clock.minutes !== 'number') S.clock.minutes = 30;
@@ -315,7 +331,9 @@ output { display: block; }
     if (!p.pal) p.pal = i ? 'fire' : 'water';
   });
 
+  var lastSave = 0;
   function save() {
+    lastSave = Date.now();
     var data = JSON.stringify(S);
     for (var i = 0; i < 300; i++) {
       try { localStorage.setItem(KEY, data); return; }
@@ -335,15 +353,16 @@ output { display: block; }
     S.clock.ms = Math.max(0, S.clock.ms - (now - last)); last = now;
   }
   function paintRound() {
-    var el = $('roundClock');
-    el.textContent = fmt(S.clock.ms);
-    el.className = 'rclock' + (S.clock.running ? ' running' : '') + (S.clock.ms <= 60000 ? ' low' : '');
+    var el = $('roundClock'), t = fmt(S.clock.ms), c = 'rclock' + (S.clock.running ? ' running' : '') + (S.clock.ms <= 60000 ? ' low' : '');
+    if (el.textContent !== t) el.textContent = t;
+    if (el.className !== c) el.className = c;
   }
   setInterval(function () {
     if (!S.clock.running) return;
     accrue();
     if (S.clock.ms === 0) { S.clock.running = false; logit('Round timer ended'); save(); render(); return; }
-    save(); paintRound();
+    paintRound();
+    if (Date.now() - lastSave > 5000) save();
   }, 250);
 
   function half(p, c, dir, d, lab) {
@@ -384,16 +403,18 @@ output { display: block; }
       '<div class="tiles">' + tiles + '</div></section>';
   }
 
-  function render() {
+  function renderBoard() {
     $('turnInfo').innerHTML = '<svg class="moon' + (S.night ? '' : ' off') + '" viewBox="0 0 24 24" role="img" aria-label="Night"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1" opacity=".25"/><path d="M12 3A9 9 0 0 0 12 21A11 11 0 0 1 12 3Z" fill="currentColor"/></svg>' + '<button class="nightbtn" data-a="night" aria-pressed="' + S.night + '" aria-label="Night mode indicator"><span class="vt">Night</span></button>' + (S.horse ? '<svg class="horse" viewBox="0 0 48 48" role="img" aria-label="Horse armor"><path d="M10 44 L13 24 L17 12 L19 4 L24 11 L31 15 L39 25 L43 33 L41 38 L34 36 L29 33 L27 44 Z" fill="currentColor"/><path d="M22 10 L32 15 L40 26 L43 33 L38 31 L30 21 L23 16 Z" fill="none" stroke="var(--bg)" stroke-width="1.6" stroke-linejoin="round"/><path d="M26 17 L35 27" stroke="var(--bg)" stroke-width="1.4"/><circle cx="29" cy="24.5" r="1.7" fill="var(--bg)"/><circle cx="41" cy="31" r="1" fill="var(--bg)"/><circle cx="26.5" cy="14" r="1" fill="var(--bg)"/><path d="M14 30 L18 31 M15 36 L19 37 M13 24 L17 25" stroke="var(--bg)" stroke-width="1.4" stroke-linecap="round"/></svg>' : '');
-    $('strip').classList.toggle('two', !!S.horse);
     $('turnInfo').setAttribute('aria-label', 'Night mode');
     $('undoBtn').disabled = hist.length === 0;
     paintRound();
     $('board').innerHTML = S.players.map(panelHTML).join('');
+    $('clockBtn').textContent = S.clock.running ? 'Pause' : 'Start';
+  }
+  function renderMenu() {
 
     $('log').innerHTML = S.log.length
-      ? S.log.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('')
+      ? lis(S.log)
       : '<li class="empty">No changes yet. Adjust life or a counter to start the log.</li>';
 
     var ed = $('counterEditor');
@@ -413,25 +434,53 @@ output { display: block; }
     }).join('');
     $('games').innerHTML = games.length ? games.map(function (g, gi) {
       return '<details class="game"><summary><b>' + esc(stamp(g.t)) + '</b><span>' + esc(g.players[0].name) + ' ' + g.players[0].life + ' \u2013 ' + g.players[1].life + ' ' + esc(g.players[1].name) + '</span></summary>' +
-        '<ul class="log">' + g.log.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul><div class="row"><button class="btn" data-a="copylog" data-g="' + gi + '">Copy log</button></div><textarea class="copybox" readonly hidden rows="8" aria-label="Log text"></textarea></details>';
+        '<ul class="log" data-g="' + gi + '"></ul><div class="row"><button class="btn" data-a="copylog" data-g="' + gi + '">Copy log</button></div><textarea class="copybox" readonly hidden rows="8" aria-label="Log text"></textarea></details>';
     }).join('') : '<p class="empty">No saved games yet. The log of each game is saved here when you tap New game.</p>';
     $('clearGames').hidden = !games.length;
     $('clearGames').textContent = clearArmed ? 'Tap again to confirm' : 'Clear previous games';
-    $('clockBtn').textContent = S.clock.running ? 'Pause' : 'Start';
     if (document.activeElement !== $('clockMin')) $('clockMin').value = S.clock.minutes;
     $('flip').checked = !!S.flip;
     $('horse').checked = !!S.horse;
     $('resetBtn').textContent = resetArmed ? 'Tap again to confirm' : 'New game';
     $('resetHint').textContent = resetArmed ? 'This clears everything.' : 'Resets life to 10, resets the round timer, and restores Ingredient and Material.';
   }
+  function render() { renderBoard(); if (!$('sheet').hidden) renderMenu(); }
+  function lis(log) { return log.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join(''); }
+
+  var rollTimer = null;
+  function d6() {
+    if (window.crypto && crypto.getRandomValues) { var a = new Uint8Array(1); do { crypto.getRandomValues(a); } while (a[0] >= 252); return a[0] % 6 + 1; }
+    return Math.floor(Math.random() * 6) + 1;
+  }
+  var PIPS = { 1: [[50, 50]], 2: [[27, 27], [73, 73]], 3: [[27, 27], [50, 50], [73, 73]], 4: [[27, 27], [73, 27], [27, 73], [73, 73]], 5: [[27, 27], [73, 27], [50, 50], [27, 73], [73, 73]], 6: [[27, 25], [73, 25], [27, 50], [73, 50], [27, 75], [73, 75]] };
+  function dieSVG(n) {
+    return '<svg class="die" viewBox="0 0 100 100" role="img" aria-label="' + n + '"><rect x="3" y="3" width="94" height="94" rx="18" fill="var(--fg)"/>' +
+      PIPS[n].map(function (q) { return '<circle cx="' + q[0] + '" cy="' + q[1] + '" r="9" fill="var(--bg)"/>'; }).join('') + '</svg>';
+  }
+  function showDice(x, y) { $('dice').innerHTML = dieSVG(x) + dieSVG(y); }
+  function doRoll() {
+    var x = d6(), y = d6();
+    snap(); logit('Rolled 2d6: ' + x + ' + ' + y + ' = ' + (x + y));
+    $('roll').hidden = false;
+    clearInterval(rollTimer);
+    var done = function () {
+      clearInterval(rollTimer); showDice(x, y);
+      $('rollLive').textContent = 'Rolled ' + x + ' and ' + y + ', total ' + (x + y);
+    };
+    if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) { done(); return; }
+    var n = 0; showDice(d6(), d6());
+    rollTimer = setInterval(function () { if (++n >= 8) { done(); return; } showDice(d6(), d6()); }, 70);
+  }
 
   document.addEventListener('click', function (e) {
     var b = e.target.closest('[data-a]'); if (!b) return;
     var a = b.dataset.a, p = S.players[+b.dataset.p], d = +b.dataset.d;
-    if (a === 'menu') { $('sheet').hidden = false; $('sheet').scrollTop = 0; return; }
+    if (a === 'menu') { $('sheet').hidden = false; renderMenu(); $('sheet').scrollTop = 0; return; }
     if (a === 'closemenu') { $('sheet').hidden = true; return; }
+    if (a === 'rollclose') { $('roll').hidden = true; clearInterval(rollTimer); return; }
+    if (a === 'rollagain') { doRoll(); save(); render(); return; }
     if (a === 'copylog') {
-      var g = b.dataset.g === 'cur' ? { t: S.started, turn: S.turn, players: S.players, log: S.log } : games[+b.dataset.g];
+      var g = b.dataset.g === 'cur' ? { t: S.started, players: S.players, log: S.log } : games[+b.dataset.g];
       if (!g) return;
       var text = logText(g), ta = b.parentElement.nextElementSibling, orig = b.dataset.label || b.textContent;
       b.dataset.label = orig;
@@ -458,6 +507,8 @@ output { display: block; }
     } else if (a === 'cleargames') {
       if (!clearArmed) { clearArmed = true; render(); return; }
       clearArmed = false; games = []; saveGames();
+    } else if (a === 'roll') {
+      doRoll();
     } else if (a === 'night') {
       S.night = !S.night;
     } else if (a === 'layout') {
@@ -487,7 +538,7 @@ output { display: block; }
       if (!resetArmed) { resetArmed = true; render(); return; }
       resetArmed = false; hist = [];
       if (S.log.length) {
-        games.unshift({ t: S.started, end: Date.now(), turn: S.turn, players: S.players.map(function (q) { return { name: q.name, life: q.life }; }), log: S.log });
+        games.unshift({ t: S.started, end: Date.now(), players: S.players.map(function (q) { return { name: q.name, life: q.life }; }), log: S.log });
         games = games.slice(0, 200); saveGames();
       }
       var names = S.players.map(function (q) { return q.name; }), pals = S.players.map(function (q) { return q.pal; });
@@ -498,6 +549,11 @@ output { display: block; }
     }
     save(); render();
   });
+
+  document.addEventListener('toggle', function (e) {
+    var ul = e.target.open && e.target.classList && e.target.classList.contains('game') && e.target.querySelector('ul');
+    if (ul && !ul.firstChild && games[+ul.dataset.g]) ul.innerHTML = lis(games[+ul.dataset.g].log);
+  }, true);
 
   document.addEventListener('change', function (e) {
     var t = e.target;
@@ -518,7 +574,11 @@ output { display: block; }
   $('newCounter').addEventListener('keydown', function (e) {
     if (e.key === 'Enter') document.querySelector('[data-a="addcounter"]').click();
   });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') $('sheet').hidden = true; });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { $('sheet').hidden = true; $('roll').hidden = true; clearInterval(rollTimer); } });
+
+  function flush() { accrue(); save(); }
+  document.addEventListener('visibilitychange', function () { if (document.hidden) flush(); });
+  addEventListener('pagehide', flush);
 
   $('ver').textContent = 'PAlamo Life Tracker v' + APP_VERSION + ' \u00B7 ' + APP_DATE;
 
