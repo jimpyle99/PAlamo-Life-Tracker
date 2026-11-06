@@ -10,6 +10,8 @@
 <link rel="preload" href="fonts/dm-sans-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/bricolage-grotesque-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>:root{color-scheme:dark;background:#0e1a1f;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<script data-goatcounter="https://palamo.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
 </head>
 <body>
 <style>
@@ -59,6 +61,9 @@ output { display: block; }
 .btn:hover { background: var(--surface-2); }
 .btn:disabled { opacity: .4; cursor: default; }
 .btn.danger { color: var(--danger); border-color: var(--danger); }
+.newgame { display: grid; gap: 10px; text-align: center; }
+.newgame .btn.danger { width: 100%; min-height: 52px; font-size: 1.1rem; background: var(--danger); color: var(--bg); }
+.newgame .btn.danger:hover { background: color-mix(in srgb, var(--danger) 85%, #fff); }
 
 .strip { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 6px; }
 .strip .rwrap { grid-column: 1; grid-row: 1; justify-self: start; }
@@ -66,9 +71,6 @@ output { display: block; }
 .strip .rollbtn { grid-column: 3; grid-row: 1; justify-self: end; }
 .strip .sr { grid-column: 1 / -1; grid-row: 2; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
 .strip .sr .btn { width: 100%; }
-.strip .sr { grid-template-columns: repeat(3, minmax(0, 1fr)) auto; }
-.strip .sr .mutebtn { width: 44px; padding: 0; display: grid; place-items: center; }
-.strip .sr .mutebtn[aria-pressed="true"] { color: var(--muted); }
 .rwrap { display: grid; place-items: center; }
 .rwrap .rclock { writing-mode: vertical-rl; transform: rotate(180deg); font-size: 1.1rem; padding: 6px 3px; }
 .strip .info { --ac: var(--fg); min-width: 0; height: 66px; display: flex; align-items: center; justify-content: center; gap: 8px; font-variant-numeric: tabular-nums; }
@@ -196,7 +198,20 @@ output { display: block; }
 .rollcard { background: var(--surface); color: var(--fg); border: 2px solid var(--moon); border-radius: 18px; padding: 18px; display: grid; justify-items: center; text-align: center; cursor: pointer; max-width: min(92vw, 420px); }
 .dice { display: flex; gap: 14px; }
 .die { width: 84px; height: 84px; display: block; }
+/* Royal Horse Armor theme (formerly PAlamo Life Delux): purple and gold, with $ rails in the side gutters. */
+:root.armor {
+  --bg: #120d24; --surface: #1b1433; --surface-2: #2a2050; --fg: #f6eed9; --muted: #bfae7e;
+  --line: #6b5420; --moon: #f3d77a;
+  background: #120d24;
+}
+:root.armor body { background: #120d24; }
+:root.armor .horse { color: var(--moon); filter: drop-shadow(0 0 3px rgba(243, 215, 122, .45)); }
+:root.armor .panel { box-shadow: inset 0 0 0 1px rgba(243, 215, 122, .18); }
+.cash { position: fixed; top: 0; bottom: 0; width: max(16px, env(safe-area-inset-left, 0px)); display: none; flex-direction: column; justify-content: space-evenly; align-items: center; color: var(--moon); font-family: var(--font-display); font-weight: 800; font-size: 13px; line-height: 1; text-shadow: 0 0 4px rgba(243, 215, 122, .5); pointer-events: none; z-index: 1; }
+.cash.on { display: flex; }
+.cash-l { left: 0; } .cash-r { right: 0; width: max(16px, env(safe-area-inset-right, 0px)); }
 </style>
+<div class="cash cash-l" aria-hidden="true"><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span></div><div class="cash cash-r" aria-hidden="true"><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span></div>
 
 <div class="app">
   <main class="board" id="board" aria-label="Players"></main>
@@ -208,7 +223,6 @@ output { display: block; }
       <button class="btn" data-a="clock" id="clockBtn" aria-label="Start or pause the round timer">Start</button>
       <button class="btn" data-a="undo" id="undoBtn">Undo</button>
       <button class="btn" data-a="menu">Menu</button>
-      <button class="btn mutebtn" data-a="mute" id="muteBtn" aria-pressed="false" aria-label="Mute sound"></button>
     </div>
   </div>
 </div>
@@ -216,7 +230,6 @@ output { display: block; }
 <div class="roll" id="roll" data-a="rollclose" role="dialog" aria-label="Dice roll" hidden>
   <div class="rollcard" data-a="rollagain">
     <div class="dice" id="dice"></div>
-    <span id="rollLive" role="status" aria-live="polite" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)"></span>
   </div>
 </div>
 
@@ -226,11 +239,9 @@ output { display: block; }
       <h1>Menu</h1>
       <button class="btn" data-a="closemenu">Close</button>
     </div>
-    <section class="box">
-      <div class="row">
-        <button class="btn danger" data-a="reset" id="resetBtn">New game</button>
-        <span class="hint" id="resetHint">Resets life to 10, resets the round timer, and restores Ingredient and Material.</span>
-      </div>
+    <section class="box newgame">
+      <button class="btn danger" data-a="reset" id="resetBtn">New game</button>
+      <p class="hint" id="resetHint">Resets life to 10, resets the round timer, and restores Ingredient and Material.</p>
     </section>
     <section class="box set" aria-labelledby="hlay">
       <h2 id="hlay">Layout</h2>
@@ -239,6 +250,7 @@ output { display: block; }
     </section>
     <section class="box set" aria-labelledby="hset">
       <h2 id="hset">Setup</h2>
+      <label class="check"><input type="checkbox" id="sound"> Sound effects (life, counters, dice, game over)</label>
       <label class="check"><input type="checkbox" id="flip"> Flip Player 1 (top) 180° so the phone can lay flat between you</label>
       <div id="counterEditor" class="set"></div>
       <div class="row">
@@ -267,8 +279,8 @@ output { display: block; }
     </section>
     <section class="box set premium" aria-labelledby="hhorse">
       <h2 id="hhorse">Premium Add-On</h2>
-      <label class="check"><input type="checkbox" id="horse"> <span><span class="price">FREE.99</span> <b>Royal Horse Armor Pack!</b> Outfit your screen in battle-ready barding and let every opponent know you play in style. Hand-forged icon, extra-wide display, zero real money. It takes up more of your screen, because you can afford it.</span></label>
-      <p class="hint">Limited time offer: FREE.99 (regular price: also FREE.99). Display only; it adds the horse armor icon next to the moon, and it can only be switched on or off here. You will never be charged.</p>
+      <label class="check"><input type="checkbox" id="horse"> <span><span class="price">FREE.99</span> <b>Royal Horse Armor Pack!</b> Outfit your screen in battle-ready barding and let every opponent know you play in style. Hand-forged icon, a purple-and-gold royal theme, gilded side rails, zero real money. It takes up more of your screen, because you can afford it.</span></label>
+      <p class="hint">Limited time offer: FREE.99 (regular price: also FREE.99). Display only; it adds the horse armor icon next to the moon and switches the whole app to the gold theme. It can only be switched on or off here. You will never be charged.</p>
     </section>
     <section class="box qrbox" aria-labelledby="hqr">
       <h2 id="hqr">Share this app</h2>
@@ -282,9 +294,16 @@ output { display: block; }
 <script>
 (function () {
   var KEY = 'pal-duel-tracker-v1';
-  var APP_VERSION = '1.9.0', APP_DATE = '2026-11-05';
+  var APP_VERSION = '2.0.0', APP_DATE = '2026-11-06';
   var S, hist = [], resetArmed = false, clearArmed = false, last = 0, games = [];
   try { games = JSON.parse(localStorage.getItem(KEY + '-games')) || []; } catch (e) { games = []; }
+  try {
+    if (!localStorage.getItem(KEY + '-delux-merged')) {
+      var dg = JSON.parse(localStorage.getItem('palamo-life-delux-v1-games')) || [];
+      if (dg.length) { games = games.concat(dg).sort(function (a, b) { return b.t - a.t; }).slice(0, 200); localStorage.setItem(KEY + '-games', JSON.stringify(games)); }
+      localStorage.setItem(KEY + '-delux-merged', '1');
+    }
+  } catch (e) {}
   function logText(g) {
     return 'PAlamo Life Tracker v' + APP_VERSION + ' \u2013 ' + stamp(g.t) + '\n' + g.players[0].name + ' ' + g.players[0].life + ' \u2013 ' + g.players[1].life + ' ' + g.players[1].name +
       '\n\n' + g.log.slice().reverse().join('\n');
@@ -344,71 +363,6 @@ output { display: block; }
     if (!p.pal) p.pal = i ? 'fire' : 'water';
   });
 
-  /* Sound: all effects are synthesized with the Web Audio API (no audio files). Mute is a device preference, kept outside game state. */
-  var muted = false, AC = null, MG = null, NB = null;
-  try { muted = localStorage.getItem(KEY + '-mute') === '1'; } catch (e) {}
-  function actx() {
-    if (!AC) {
-      try {
-        var C = window.AudioContext || window.webkitAudioContext;
-        if (C) { AC = new C(); MG = AC.createGain(); MG.gain.value = 0.22; MG.connect(AC.destination); }
-      } catch (e) { AC = null; }
-    }
-    if (AC && AC.state === 'suspended') { try { AC.resume(); } catch (e) {} }
-    return AC;
-  }
-  function tone(c, t, f0, f1, dur, type, vol) {
-    var o = c.createOscillator(), g = c.createGain();
-    o.type = type || 'sine';
-    o.frequency.setValueAtTime(f0, t);
-    if (f1 && f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, t + dur);
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(vol || 0.6, t + 0.012);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    o.connect(g); g.connect(MG); o.start(t); o.stop(t + dur + 0.03);
-  }
-  function tick(c, t, freq, dur, vol) {
-    if (!NB) {
-      NB = c.createBuffer(1, Math.floor(c.sampleRate * 0.1), c.sampleRate);
-      var d = NB.getChannelData(0); for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-    }
-    var s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
-    s.buffer = NB; f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = 1.2;
-    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    s.connect(f); f.connect(g); g.connect(MG); s.start(t); s.stop(t + dur + 0.02);
-  }
-  var SFX = {
-    up: function (c, t) { tone(c, t, 520, 780, 0.12, 'triangle', 0.7); },
-    down: function (c, t) { tone(c, t, 420, 240, 0.14, 'triangle', 0.7); },
-    cup: function (c, t) { tone(c, t, 900, 1200, 0.06, 'square', 0.25); },
-    cdown: function (c, t) { tone(c, t, 700, 520, 0.06, 'square', 0.25); },
-    roll: function (c, t) {
-      for (var i = 0; i < 8; i++) tick(c, t + i * 0.07, 1800 + (i % 3) * 700, 0.045, 0.9);
-      tone(c, t + 0.56, 180, 90, 0.16, 'sine', 0.9);
-    },
-    undo: function (c, t) { tone(c, t, 660, 330, 0.16, 'sawtooth', 0.25); },
-    start: function (c, t) { tone(c, t, 440, 440, 0.09, 'sine', 0.6); tone(c, t + 0.09, 660, 660, 0.14, 'sine', 0.6); },
-    pause: function (c, t) { tone(c, t, 660, 660, 0.09, 'sine', 0.6); tone(c, t + 0.09, 440, 440, 0.14, 'sine', 0.6); },
-    alarm: function (c, t) { for (var i = 0; i < 3; i++) tone(c, t + i * 0.22, 880, 880, 0.14, 'square', 0.35); },
-    night: function (c, t) { tone(c, t, 330, 247, 0.28, 'sine', 0.5); },
-    newgame: function (c, t) { [392, 523, 659, 784].forEach(function (f, i) { tone(c, t + i * 0.07, f, f, 0.12, 'triangle', 0.55); }); },
-    over: function (c, t) { [392, 330, 262, 196].forEach(function (f, i) { tone(c, t + i * 0.2, f, f * 0.97, 0.26, 'triangle', 0.7); }); },
-    on: function (c, t) { tone(c, t, 600, 900, 0.1, 'sine', 0.5); }
-  };
-  function sfx(n) {
-    if (muted) return;
-    var c = actx(); if (!c || !SFX[n]) return;
-    try { SFX[n](c, c.currentTime + 0.01); } catch (e) {}
-  }
-  function paintMute() {
-    var b = $('muteBtn'); if (!b) return;
-    b.setAttribute('aria-pressed', String(muted));
-    b.setAttribute('aria-label', muted ? 'Sound is off. Tap to turn sound on' : 'Sound is on. Tap to mute');
-    b.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="display:block"><path d="M3 9v6h4l5 4V5L7 9z" fill="currentColor"/>' +
-      (muted ? '<path d="M16 9l6 6M22 9l-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'
-             : '<path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>') + '</svg>';
-  }
-
   var lastSave = 0;
   function save() {
     lastSave = Date.now();
@@ -424,6 +378,79 @@ output { display: block; }
   function sgn(d) { return (d > 0 ? '+' : '−') + Math.abs(d); }
   var $ = function (id) { return document.getElementById(id); };
 
+  /* Synthesized sound effects (Web Audio, no audio files).
+     hit: low thump for life changes. chirp: quick blip for Ingredient / Material / other counters.
+     defeat: falling four-note phrase with a held low note. victory: rising arpeggio with a held chord. */
+  var SFX = (function () {
+    var ctx = null, master = null;
+    function ac() {
+      if (!ctx) {
+        var C = window.AudioContext || window.webkitAudioContext; if (!C) return null;
+        try { ctx = new C(); master = ctx.createGain(); master.gain.value = 0.6; master.connect(ctx.destination); } catch (e) { ctx = null; return null; }
+      }
+      if (ctx.state === 'suspended') { try { ctx.resume(); } catch (e) {} }
+      return ctx;
+    }
+    function tone(type, f0, f1, t0, dur, vol, glide) {
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = type; o.frequency.setValueAtTime(f0, t0);
+      if (f1 && f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, t0 + (glide || dur));
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(vol, t0 + 0.006);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      o.connect(g); g.connect(master); o.start(t0); o.stop(t0 + dur + 0.02);
+    }
+    function noise(t0, dur, vol, hz) {
+      var n = Math.max(1, Math.floor(ctx.sampleRate * dur)), b = ctx.createBuffer(1, n, ctx.sampleRate), x = b.getChannelData(0);
+      for (var i = 0; i < n; i++) x[i] = (Math.random() * 2 - 1) * (1 - i / n);
+      var s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+      s.buffer = b; f.type = 'lowpass'; f.frequency.value = hz; g.gain.value = vol;
+      s.connect(f); f.connect(g); g.connect(master); s.start(t0);
+    }
+    function on() { return S && S.sound !== false && ac(); }
+    return {
+      unlock: function () { if (S && S.sound !== false) ac(); },
+      hit: function (up) {
+        if (!on()) return; var t = ctx.currentTime;
+        if (up) { tone('sine', 70, 150, t, 0.13, 0.9); noise(t, 0.03, 0.25, 2500); }
+        else { tone('sine', 150, 48, t, 0.13, 1); noise(t, 0.035, 0.35, 1800); }
+      },
+      chirp: function (up) {
+        if (!on()) return; var t = ctx.currentTime;
+        if (up) tone('triangle', 300, 1100, t, 0.1, 0.5, 0.07);
+        else tone('triangle', 1000, 320, t, 0.1, 0.5, 0.07);
+      },
+      defeat: function () {
+        if (!on()) return; var t = ctx.currentTime;
+        [440, 392, 330, 294].forEach(function (f, i) { tone('square', f, 0, t + i * 0.15, 0.14, 0.18); tone('triangle', f / 2, 0, t + i * 0.15, 0.14, 0.25); });
+        tone('square', 277, 0, t + 0.6, 0.75, 0.16); tone('triangle', 138.5, 0, t + 0.6, 0.8, 0.3);
+        return 1.45;
+      },
+      rattle: function () {
+        if (!on()) return; var t = ctx.currentTime + Math.random() * 0.03;
+        noise(t, 0.05, 0.45, 450 + Math.random() * 350);
+        tone('sine', 170 + Math.random() * 110, 0, t, 0.06, 0.22);
+      },
+      thud: function () {
+        if (!on()) return; var t = ctx.currentTime;
+        tone('sine', 110, 40, t, 0.22, 1); noise(t, 0.05, 0.5, 900);
+        tone('sine', 95, 38, t + 0.07, 0.16, 0.55); noise(t + 0.07, 0.035, 0.3, 800);
+      },
+      victory: function (delay) {
+        if (!on()) return; var t = ctx.currentTime + (delay || 0);
+        [523, 659, 784, 1047].forEach(function (f, i) { tone('square', f, 0, t + i * 0.12, 0.13, 0.2); });
+        [262, 330, 392, 523].forEach(function (f) { tone('triangle', f, 0, t + 0.5, 0.8, 0.18); });
+        tone('sine', 131, 0, t + 0.5, 0.8, 0.35);
+      }
+    };
+  })();
+  function gameOverSound() {
+    /* Defeat, then victory right after it. Both are scheduled on the audio clock at once,
+       so the victory sound can't be dropped by a delayed or throttled timer. */
+    var len = SFX.defeat();
+    if (len) SFX.victory(len);
+  }
+
   function fmt(ms) { var s = Math.ceil(ms / 1000); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
   function accrue() {
     if (!S.clock.running) return;
@@ -438,7 +465,7 @@ output { display: block; }
   setInterval(function () {
     if (!S.clock.running) return;
     accrue();
-    if (S.clock.ms === 0) { S.clock.running = false; logit('Round timer ended'); sfx('alarm'); save(); render(); return; }
+    if (S.clock.ms === 0) { S.clock.running = false; logit('Round timer ended'); save(); render(); return; }
     paintRound();
     if (Date.now() - lastSave > 5000) save();
   }, 250);
@@ -484,6 +511,9 @@ output { display: block; }
   function renderBoard() {
     $('turnInfo').innerHTML = '<svg class="moon' + (S.night ? '' : ' off') + '" viewBox="0 0 24 24" role="img" aria-label="Night"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1" opacity=".25"/><path d="M12 3A9 9 0 0 0 12 21A11 11 0 0 1 12 3Z" fill="currentColor"/></svg>' + '<button class="nightbtn" data-a="night" aria-pressed="' + S.night + '" aria-label="Night mode indicator"><span class="vt">Night</span></button>' + (S.horse ? '<svg class="horse" viewBox="0 0 48 48" role="img" aria-label="Horse armor"><path d="M10 44 L13 24 L17 12 L19 4 L24 11 L31 15 L39 25 L43 33 L41 38 L34 36 L29 33 L27 44 Z" fill="currentColor"/><path d="M22 10 L32 15 L40 26 L43 33 L38 31 L30 21 L23 16 Z" fill="none" stroke="var(--bg)" stroke-width="1.6" stroke-linejoin="round"/><path d="M26 17 L35 27" stroke="var(--bg)" stroke-width="1.4"/><circle cx="29" cy="24.5" r="1.7" fill="var(--bg)"/><circle cx="41" cy="31" r="1" fill="var(--bg)"/><circle cx="26.5" cy="14" r="1" fill="var(--bg)"/><path d="M14 30 L18 31 M15 36 L19 37 M13 24 L17 25" stroke="var(--bg)" stroke-width="1.4" stroke-linecap="round"/></svg>' : '');
     $('turnInfo').setAttribute('aria-label', 'Night mode');
+    document.documentElement.classList.toggle('armor', !!S.horse);
+    document.querySelectorAll('.cash').forEach(function (e) { e.classList.toggle('on', !!S.horse); });
+    var tc = document.querySelector('meta[name=theme-color]'); if (tc) tc.setAttribute('content', S.horse ? '#120d24' : '#0e1a1f');
     $('undoBtn').disabled = hist.length === 0;
     paintRound();
     $('board').innerHTML = S.players.map(panelHTML).join('');
@@ -518,6 +548,7 @@ output { display: block; }
     $('clearGames').textContent = clearArmed ? 'Tap again to confirm' : 'Clear previous games';
     if (document.activeElement !== $('clockMin')) $('clockMin').value = S.clock.minutes;
     $('flip').checked = !!S.flip;
+    $('sound').checked = S.sound !== false;
     $('horse').checked = !!S.horse;
     $('resetBtn').textContent = resetArmed ? 'Tap again to confirm' : 'New game';
     $('resetHint').textContent = resetArmed ? 'This clears everything.' : 'Resets life to 10, resets the round timer, and restores Ingredient and Material.';
@@ -538,28 +569,24 @@ output { display: block; }
   function showDice(x, y) { $('dice').innerHTML = dieSVG(x) + dieSVG(y); }
   function doRoll() {
     var x = d6(), y = d6();
-    sfx('roll');
     snap(); logit('Rolled 2d6: ' + x + ' + ' + y + ' = ' + (x + y));
     $('roll').hidden = false;
     clearInterval(rollTimer);
     var done = function () {
-      clearInterval(rollTimer); showDice(x, y);
-      $('rollLive').textContent = 'Rolled ' + x + ' and ' + y + ', total ' + (x + y);
+      clearInterval(rollTimer); showDice(x, y); SFX.thud();
+      $('roll').setAttribute('aria-label', 'Dice roll: ' + x + ' and ' + y + ', total ' + (x + y));
     };
     if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) { done(); return; }
-    var n = 0; showDice(d6(), d6());
-    rollTimer = setInterval(function () { if (++n >= 8) { done(); return; } showDice(d6(), d6()); }, 70);
+    var n = 0; showDice(d6(), d6()); SFX.rattle();
+    rollTimer = setInterval(function () { if (++n >= 16) { done(); return; } showDice(d6(), d6()); if (n % 2 === 0) SFX.rattle(); }, 70);
   }
 
+  document.addEventListener('pointerdown', function () { SFX.unlock(); }, { once: true });
   document.addEventListener('click', function (e) {
     var b = e.target.closest('[data-a]'); if (!b) return;
     var a = b.dataset.a, p = S.players[+b.dataset.p], d = +b.dataset.d;
     if (a === 'menu') { $('sheet').hidden = false; renderMenu(); $('sheet').scrollTop = 0; return; }
     if (a === 'closemenu') { $('sheet').hidden = true; return; }
-    if (a === 'mute') {
-      muted = !muted; try { localStorage.setItem(KEY + '-mute', muted ? '1' : '0'); } catch (x) {}
-      paintMute(); sfx('on'); return;
-    }
     if (a === 'rollclose') { $('roll').hidden = true; clearInterval(rollTimer); return; }
     if (a === 'rollagain') { doRoll(); save(); render(); return; }
     if (a === 'copylog') {
@@ -581,37 +608,35 @@ output { display: block; }
     if (a !== 'cleargames' && clearArmed) clearArmed = false;
     accrue();
     if (a === 'life') {
-      snap(); p.life += d; logit(p.name + ' life ' + sgn(d) + ' → ' + p.life);
-      sfx(p.life <= 0 && p.life - d > 0 ? 'over' : d > 0 ? 'up' : 'down');
+      snap(); var was = p.life; p.life += d; logit(p.name + ' life ' + sgn(d) + ' → ' + p.life);
+      if (was > 0 && p.life <= 0) gameOverSound(); else SFX.hit(d > 0);
     } else if (a === 'cnt') {
       var c = S.counters.filter(function (x) { return x.id === b.dataset.c; })[0];
       var nv = Math.max(0, (p.vals[c.id] || 0) + d);
       if (nv === (p.vals[c.id] || 0)) return;
-      snap(); p.vals[c.id] = nv; logit(p.name + ' ' + c.name + ' ' + sgn(d) + ' → ' + nv);
-      sfx(d > 0 ? 'cup' : 'cdown');
+      snap(); p.vals[c.id] = nv; logit(p.name + ' ' + c.name + ' ' + sgn(d) + ' → ' + nv); SFX.chirp(d > 0);
     } else if (a === 'cleargames') {
       if (!clearArmed) { clearArmed = true; render(); return; }
       clearArmed = false; games = []; saveGames();
     } else if (a === 'roll') {
       doRoll();
     } else if (a === 'night') {
-      S.night = !S.night; sfx('night');
+      S.night = !S.night;
     } else if (a === 'layout') {
       S.layout = +b.dataset.l === 2 ? 2 : 1;
     } else if (a === 'pal') {
       p.pal = b.dataset.pal;
     } else if (a === 'clock') {
-      if (S.clock.running) { S.clock.running = false; sfx('pause'); }
-      else if (S.clock.ms > 0) { S.clock.running = true; last = Date.now(); sfx('start'); }
+      if (S.clock.running) { S.clock.running = false; }
+      else if (S.clock.ms > 0) { S.clock.running = true; last = Date.now(); }
     } else if (a === 'clockreset') {
       S.clock.running = false;
       S.clock.ms = S.clock.minutes * 60000;
     } else if (a === 'undo') {
       if (!hist.length) return;
-      sfx('undo');
-      var keep = S.players.map(function (q) { return { pal: q.pal }; }), ck = S.clock, lay = S.layout, nt = S.night, hs = !!S.horse;
+      var keep = S.players.map(function (q) { return { pal: q.pal }; }), ck = S.clock, lay = S.layout, nt = S.night, hs = !!S.horse, snd = S.sound;
       S = JSON.parse(hist.pop());
-      S.players.forEach(function (q, i) { q.pal = keep[i].pal; }); S.clock = ck; S.layout = lay; S.night = nt; S.horse = hs;
+      S.players.forEach(function (q, i) { q.pal = keep[i].pal; }); S.clock = ck; S.layout = lay; S.night = nt; S.horse = hs; S.sound = snd;
     } else if (a === 'addcounter') {
       var n = $('newCounter').value.trim(); if (!n) return;
       snap(); var id = 'c' + Math.random().toString(36).slice(2, 7);
@@ -622,14 +647,15 @@ output { display: block; }
       $('counterEditor').innerHTML = '';
     } else if (a === 'reset') {
       if (!resetArmed) { resetArmed = true; render(); return; }
-      resetArmed = false; hist = []; sfx('newgame');
+      resetArmed = false; hist = [];
       if (S.log.length) {
         games.unshift({ t: S.started, end: Date.now(), players: S.players.map(function (q) { return { name: q.name, life: q.life }; }), log: S.log });
         games = games.slice(0, 200); saveGames();
+        try { if (window.goatcounter && goatcounter.count) goatcounter.count({ path: 'game-played', title: 'Game played', event: true }); } catch (e) {}
       }
       var names = S.players.map(function (q) { return q.name; }), pals = S.players.map(function (q) { return q.pal; });
       var cs = [{ id: 'ing', name: 'Ingredient' }, { id: 'mat', name: 'Material' }].concat(S.counters.filter(function (x) { return x.id !== 'ing' && x.id !== 'mat'; }));
-      var horse = !!S.horse, flip = S.flip, mins = S.clock.minutes, lay = S.layout; S = fresh(10, cs); S.flip = flip; S.layout = lay; S.horse = horse;
+      var horse = !!S.horse, flip = S.flip, mins = S.clock.minutes, lay = S.layout; var snd = S.sound; S = fresh(10, cs); S.sound = snd; S.flip = flip; S.layout = lay; S.horse = horse;
       S.clock.minutes = mins; S.clock.ms = mins * 60000; S.players.forEach(function (q, i) { q.name = names[i]; q.pal = pals[i]; });
       $('counterEditor').innerHTML = '';
     }
@@ -651,6 +677,8 @@ output { display: block; }
       S.clock.minutes = Math.max(1, Math.min(180, parseInt(t.value, 10) || 30));
     } else if (t.id === 'horse') {
       S.horse = t.checked;
+    } else if (t.id === 'sound') {
+      S.sound = t.checked; if (t.checked) SFX.chirp(true);
     } else if (t.id === 'flip') {
       S.flip = t.checked;
     } else return;
@@ -666,7 +694,6 @@ output { display: block; }
   document.addEventListener('visibilitychange', function () { if (document.hidden) flush(); });
   addEventListener('pagehide', flush);
 
-  paintMute();
   $('ver').textContent = 'PAlamo Life Tracker v' + APP_VERSION + ' \u00B7 ' + APP_DATE;
 
   render();

@@ -5,6 +5,24 @@ Versions before 1.0 were test builds (0.1.0 to 0.2.3).
 
 The running version is shown at the bottom of the in-app Menu and on the first line of every copied game log.
 
+## [2.0.0] - 2026-11-06
+### Added
+- **Visitor counting with GoatCounter.** The page now loads a small script from `gc.zgo.at` that reports page loads to a GoatCounter dashboard. It sets no cookies and collects no names or accounts, only counts, approximate country, browser, device and referrer.
+- **Games-played count.** Tapping New game on a game that has any history sends one anonymous `game-played` event to GoatCounter. No game contents, names or scores are sent.
+### Changed
+- **New game button** at the top of the Menu is now a full-width solid red button, with its description centered underneath.
+### Notes
+- This is the first version that makes a network request after the page loads. The game state still stays on the device in localStorage, and the app itself still works offline; the counter just won't report while offline or when an ad blocker blocks it.
+- Includes everything from 1.9.1 to 1.9.3 below.
+
+## [1.9.1 to 1.9.3] - 2026-11-05
+Entries for these three releases were reconstructed from the code differences against 1.9.0, so they are combined and not split by version.
+### Changed
+- **Sound engine replaced.** Sound is a new set of synthesized effects with no audio files: a low thump for life changes, a blip for counters, a rattle and thud for dice, and a falling "defeat" phrase followed by a rising "victory" phrase when a player's life reaches 0.
+- **Sound is now a "Sound effects" checkbox in Menu → Setup** (on by default). The mute button on the home screen is gone, and the timer-end alarm, Undo, New game, Night and timer start/pause sounds from 1.9.0 no longer play.
+- **Royal Horse Armor** now also switches the app to a purple-and-gold theme with gilded `$` rails in the side gutters, in addition to the horse icon.
+- **Delux is retired.** `delux/index.html` is now a redirect page to the main app. Saved games from the old Delux page are merged into the main app's history once, the first time the new version loads.
+
 ## [1.9.0] - 2026-11-05
 ### Added
 - **Sound effects**, synthesized in the browser with the Web Audio API (no audio files, no downloads, no licenses, about 6 KB of code). Sounds play for life up and down, a game-over sequence when a player's life drops to 0 or below, Ingredient/Material and other counter changes, the dice roll (rattle and thud), timer start, pause and end, Undo, New game and the Night toggle.
