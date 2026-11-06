@@ -5,6 +5,12 @@ Versions before 1.0 were test builds (0.1.0 to 0.2.3).
 
 The running version is shown at the bottom of the in-app Menu and on the first line of every copied game log.
 
+## [2.5.1] - 2026-11-06
+### Added
+- **Branding under the QR code in the Menu.** "Remember the PAlamo!" with "Share with pals, friends and all your buddies.", and a small line under the link: "PAlamo™ and Remember the PAlamo™ © 2026 James Pyle. All rights reserved."
+### Changed
+- The new-counter hint text now reads "e.g. Poison" instead of a game-specific example.
+
 ## [2.5.0] - 2026-11-06
 ### Added
 - **Dice style picker.** Under "Dice color" there is a new "Dice style" row: Plain, Marble, Wood, Ice and Glass. The texture is drawn on top of whichever dice color you picked, and each button previews the style in that color. Plain is the default and looks like 2.4.0. Ice and Glass also put a small glint on every pip. The choice is saved on the phone and survives New game and Undo.
