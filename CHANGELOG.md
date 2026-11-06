@@ -5,6 +5,14 @@ Versions before 1.0 were test builds (0.1.0 to 0.2.3).
 
 The running version is shown at the bottom of the in-app Menu and on the first line of every copied game log.
 
+## [1.9.0] - 2026-11-05
+### Added
+- **Sound effects**, synthesized in the browser with the Web Audio API (no audio files, no downloads, no licenses, about 6 KB of code). Sounds play for life up and down, a game-over sequence when a player's life drops to 0 or below, Ingredient/Material and other counter changes, the dice roll (rattle and thud), timer start, pause and end, Undo, New game and the Night toggle.
+- **Mute button** on the home screen, at the right end of the Start / Undo / Menu row. The choice is saved on the device and survives reloads, New game and Undo. Sound is on by default.
+### Notes
+- Browsers only allow sound after the first tap on the page, so the timer-end alarm only sounds if you have tapped something since loading the page.
+- On iPhone, the ringer switch silences web audio.
+
 ## [1.8.0] - 2026-11-05
 ### Added
 - **QR code at the bottom of the Menu** ("Share this app") that opens the GitHub Pages site, so someone next to you can scan it to load the app. The standard page links to `https://jimpyle99.github.io/PAlamo-Life-Tracker/` and Delux links to the same address plus `delux/`. The code is a fixed image built into the page, so it works offline and adds no script or library (about 2.5 KB).
