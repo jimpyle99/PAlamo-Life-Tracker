@@ -5,6 +5,54 @@ Versions before 1.0 were test builds (0.1.0 to 0.2.3).
 
 The running version is shown at the bottom of the in-app Menu and on the first line of every copied game log.
 
+## [2.5.0] - 2026-11-06
+### Added
+- **Dice style picker.** Under "Dice color" there is a new "Dice style" row: Plain, Marble, Wood, Ice and Glass. The texture is drawn on top of whichever dice color you picked, and each button previews the style in that color. Plain is the default and looks like 2.4.0. Ice and Glass also put a small glint on every pip. The choice is saved on the phone and survives New game and Undo.
+- The textures are drawn in code (no image files), about 4 KB added. Marble, Ice and the cracks vary slightly from face to face so the two dice don't look identical.
+
+## [2.4.0] - 2026-11-06
+### Added
+- **Dice color picker in the Menu.** Under the two player colors there is now a "Dice color" row with the same six swatches (Grass, Fire, Water, Ice, Dark, Dragon). The dice take that color, with dark pips, and a small preview of two dice sits next to the heading. The choice is saved on the phone and survives New game and Undo.
+### Changed
+- The dice used to be ivory white. They now default to **Ice** (the closest of the six to white). There is no white option; tell me if you want one added as a seventh.
+
+## [2.3.4] - 2026-11-06
+### Changed
+- **Dice land in 1.6 seconds** (2 in 2.3.3, 2.5 in 2.3.2, 4 in 2.3.1, 1.1 before that). Tune it with the `ROLL_MS` number in the code.
+
+## [2.3.3] - 2026-11-06
+### Changed
+- **Dice land in 2 seconds** (2.5 in 2.3.2, 4 in 2.3.1, 1.1 before that). The time is the `ROLL_MS` number in the code if you want to tune it again.
+
+## [2.3.2] - 2026-11-06
+### Changed
+- **Dice land in 2.5 seconds** (4 seconds in 2.3.1, 1.1 seconds before that). Same slowing tumble, rattle and thud.
+
+## [2.3.1] - 2026-11-06
+### Changed
+- **Dice take 4 seconds to land** (they landed after about 1.1 seconds before). The tumble now starts fast and slows down, with the rattle sound following it, and ends with the thud. Tapping the roll card still closes it or rolls again, and the result is written to the log the moment you tap the dice button. With "reduce motion" turned on in the phone's settings, the dice still land at once.
+
+## [2.3.0] - 2026-11-06
+### Added
+- **Boxing bell on the round timer.** Tapping Start rings the bell once (a long ring). Tapping Pause rings it twice, quickly. The bell is generated in the browser (no audio file) and follows the Menu's "Sound effects" checkbox. Nothing rings when the timer reaches 0:00 by itself, and Start does nothing (and is silent) if the timer is already at 0:00.
+
+## [2.2.0] - 2026-11-06
+### Changed
+- **Player colors cut from 9 to 6:** Grass, Fire, Water, Ice, Dark and Dragon. Neutral, Electric and Ground are gone.
+- **Dark is now a deeper purple** (it was a pale lavender), so it is clearly different from Dragon's pink.
+- **Color picker is a 3 by 2 grid** so the six swatches line up.
+- Saved games that used a removed color are moved to the nearest remaining one: Neutral becomes Ice, Electric becomes Fire, Ground becomes Grass. Default colors are unchanged (Player 1 Water, Player 2 Fire).
+
+## [2.1.1] - 2026-11-06
+### Changed
+- **Layout picker shows screenshots.** The Menu's Layout buttons now show a small picture of the jaybl🩸🩸d and Icarys boards above each name, and the text description is gone. The pictures are embedded in the page (about 7 KB total), so they work offline. They are screenshots, so they need retaking if the board design changes.
+
+## [2.1.0] - 2026-11-06
+### Added
+- **New game sound and return to the board.** After you confirm New game (the second tap), the Menu closes so you land on the main screen, and a short rising fanfare plays.
+- **Night sound.** Toggling Night plays a spooky wobbling tone: a slow descending groan when Night turns on, and a shorter rising one when it turns off.
+- Both sounds are generated in the browser (no audio files) and follow the existing "Sound effects" checkbox in the Menu, which now lists them.
+
 ## [2.0.0] - 2026-11-06
 ### Added
 - **Visitor counting with GoatCounter.** The page now loads a small script from `gc.zgo.at` that reports page loads to a GoatCounter dashboard. It sets no cookies and collects no names or accounts, only counts, approximate country, browser, device and referrer.
