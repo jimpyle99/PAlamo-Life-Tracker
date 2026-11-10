@@ -5,6 +5,19 @@ Versions before 1.0 were test builds (0.1.0 to 0.2.3).
 
 The running version is shown at the bottom of the in-app Menu and on the first line of every copied game log.
 
+## [2.7.0] - 2026-11-10
+### Added
+- **Works offline.** A new file, `sw.js`, saves a copy of the app and its fonts on the device the first time it is opened online. After that the app opens with no connection. The version line at the bottom of the Menu shows "Offline ready" once the copy is saved. When online, the newest release still loads first; if the connection fails or has not answered within 3 seconds, the saved copy opens instead and the newer one is saved for next time. This needs the hosted site (https); it does nothing when `index.html` is opened straight from a folder.
+### Changed
+- **The Menu is faster with a long history.** Each Menu section (History, counters, colors and dice, Layout, Previous games) is now rebuilt only when its own data changes, instead of all of them on every tap. Measured at 4x CPU slowdown with 2,000 log lines and 200 saved games, a color tap went from about 265 ms to about 30 ms.
+### Fixed
+- A saved game you had expanded under Previous games no longer snaps shut when you tap something else in the Menu.
+
+## [2.6.0] - 2026-11-10
+### Added
+- **5-minute warning on the round timer.** When the timer first reaches 5:00 it plays three rising beeps (different from the bell), pulses an amber border with a "5 minutes left" banner for 6 seconds, turns the clock amber, and vibrates where the phone supports it. It fires once per round. Starting a timer that is already at or under 5:00 does not fire it; Reset timer and New game re-arm it. A backgrounded tab can delay it, and the banner then shows the time actually left.
+- **Tournament bracket.** Menu > Tournament > Open bracket. Enter 2 to 32 names, one per line (line 1 is seed 1), and tap Build bracket for a single-elimination bracket. Top seeds get byes when the field is not a power of two. Tap a name to advance it, tap again to undo; undoing clears any later matches that depended on it. A Shuffle list button randomizes the seeding. The bracket is saved on the phone separately, so New game and Undo do not touch it. It is not linked to the life counters.
+
 ## [2.5.1] - 2026-11-06
 ### Added
 - **Branding under the QR code in the Menu.** "Remember the PAlamo!" with "Share with pals, friends and all your buddies.", and a small line under the link: "PAlamo™ and Remember the PAlamo™ © 2026 James Pyle. All rights reserved."

@@ -1,13 +1,20 @@
 # PAlamo Life Tracker
 
 Two-player life, Ingredient and Material tracker with turn clocks, for the Palworld card game.
-One file, `index.html`. No build step and no server.
+Two files: `index.html` (the app) and `sw.js` (offline support). No build step and no server.
 
 ## Run it
 - Open `index.html` in a browser, or
 - Host it with GitHub Pages: Settings -> Pages -> Deploy from a branch -> main / root.
 
 Saved games and settings are kept in each person's own browser. Nothing is sent anywhere.
+
+## Offline
+`sw.js` saves a copy of the page and the fonts on each device the first time the hosted site is opened, so the app still opens with no connection. The Menu's version line shows "Offline ready" once that copy exists. It only works on the hosted site (https), not when `index.html` is opened from a folder.
+
+- New releases need nothing extra: the page is fetched fresh whenever the device is online.
+- If you replace a font or add another file under a name that already exists, change `CACHE` at the top of `sw.js` (`palamo-v1` to `palamo-v2`), or devices keep the old copy.
+- On iPhone, Safari can clear a site's saved data after about a week without a visit. Adding the app to the Home Screen avoids that.
 
 ## Two pages
 - `index.html`: PAlamo Life Tracker (the standard page).

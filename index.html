@@ -26,7 +26,7 @@
   --bg: #0e1a1f; --surface: #15262d; --surface-2: #1d3640; --fg: #e4eef1; --muted: #8fa9b3;
   --line: #2b4651; --danger: #ff8a80;
   --pal-grass: #6fd16f; --pal-fire: #f0925a; --pal-water: #5aaaf0; --pal-ice: #7fe0f5; --pal-dark: #a66cf0; --pal-dragon: #f08ab0;
-  --res-life: #5aaaf0; --res-ing: #6fd16f; --res-mat: #f07a70;
+  --res-life: #5aaaf0; --warn: #f5c04a; --res-ing: #6fd16f; --res-mat: #f07a70;
   --moon: #e8e3c4;
   --tok-life: #1d1d24; --tok-mat: #d4572e; --tok-ing: #5a9a16; --tok-gen: #5b6b7d;
   --font-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
@@ -97,6 +97,8 @@ output { display: block; }
 .name { min-width: 0; width: 100%; font-family: var(--font-display); font-weight: 800; font-size: 1.1rem; background: transparent; border: 0; border-bottom: 2px solid var(--line); padding: 4px 0; color: var(--c); }
 .rclock { font-family: var(--font-display); font-weight: 800; font-size: 1.25rem; font-variant-numeric: tabular-nums; padding: 4px 8px; border-radius: 8px; background: var(--surface-2); color: var(--fg); white-space: nowrap; }
 .rclock.running { background: var(--moon); color: var(--bg); }
+.rclock.warn { color: var(--warn); }
+.rclock.running.warn { background: var(--warn); color: var(--bg); }
 .rclock.low { color: var(--danger); }
 .rclock.running.low { background: var(--danger); color: var(--bg); }
 
@@ -219,8 +221,36 @@ output { display: block; }
 .cash { position: fixed; top: 0; bottom: 0; width: max(16px, env(safe-area-inset-left, 0px)); display: none; flex-direction: column; justify-content: space-evenly; align-items: center; color: var(--moon); font-family: var(--font-display); font-weight: 800; font-size: 13px; line-height: 1; text-shadow: 0 0 4px rgba(243, 215, 122, .5); pointer-events: none; z-index: 1; }
 .cash.on { display: flex; }
 .cash-l { left: 0; } .cash-r { right: 0; width: max(16px, env(safe-area-inset-right, 0px)); }
+/* 5-minute warning: full-screen amber pulse + banner, shown for 6 s when the round timer crosses 5:00. */
+.warnflash { position: fixed; inset: 0; z-index: 30; pointer-events: none; display: flex; justify-content: center; align-items: flex-start; padding-top: calc(14px + env(safe-area-inset-top, 0px)); box-shadow: inset 0 0 0 6px var(--warn), inset 0 0 48px 10px color-mix(in srgb, var(--warn) 55%, transparent); }
+.warnflash[hidden] { display: none; }
+.warnflash span { padding: 8px 18px; border-radius: 999px; background: var(--warn); color: var(--bg); font-family: var(--font-display); font-weight: 800; font-size: 1.1rem; }
+.warnflash.go { animation: warnpulse .8s ease-in-out 4; }
+@keyframes warnpulse { 0%, 100% { opacity: .3; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .warnflash.go { animation: none; } }
+/* Tournament bracket */
+#tsheet { z-index: 21; }
+.sheetin.wide { max-width: none; }
+.tn-ta { font-size: 16px; resize: vertical; }
+.tn-champ { padding: 10px 14px; margin-bottom: 12px; border: 2px solid var(--moon); border-radius: 12px; font-family: var(--font-display); font-weight: 800; font-size: 1.2rem; color: var(--moon); overflow-wrap: anywhere; }
+.tn-tree { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 8px; align-items: stretch; }
+.tn-col { display: flex; flex-direction: column; flex: 0 0 168px; gap: 8px; }
+.tn-col h3 { margin: 0; font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); text-align: center; }
+.tn-matches { flex: 1; display: flex; flex-direction: column; justify-content: space-around; gap: 10px; }
+.tn-match { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface-2); }
+.tn-slot { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 40px; padding: 4px 8px; border: 0; background: transparent; text-align: left; font-weight: 700; overflow: hidden; }
+.tn-slot + .tn-slot { border-top: 1px solid var(--line); }
+.tn-slot i { font-style: normal; flex: none; min-width: 1.6em; font-size: .72rem; color: var(--muted); }
+.tn-slot span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tn-slot:not(:disabled):hover { background: color-mix(in srgb, var(--fg) 10%, transparent); }
+.tn-slot:disabled { cursor: default; }
+.tn-slot.win { background: color-mix(in srgb, var(--pal-grass) 28%, transparent); }
+.tn-slot.lose, .tn-slot.tbd, .tn-slot.bye { color: var(--muted); font-weight: 400; }
+.tn-slot.lose span { text-decoration: line-through; }
 </style>
 <div class="cash cash-l" aria-hidden="true"><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span></div><div class="cash cash-r" aria-hidden="true"><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span></div>
+
+<div class="warnflash" id="warnflash" role="alert" hidden><span></span></div>
 
 <div class="app">
   <main class="board" id="board" aria-label="Players"></main>
@@ -233,6 +263,31 @@ output { display: block; }
       <button class="btn" data-a="undo" id="undoBtn">Undo</button>
       <button class="btn" data-a="menu">Menu</button>
     </div>
+  </div>
+</div>
+
+<div class="sheet" id="tsheet" role="dialog" aria-label="Tournament bracket" hidden>
+  <div class="sheetin wide">
+    <div class="sheethead">
+      <h1>Tournament</h1>
+      <button class="btn" data-t="close">Close</button>
+    </div>
+    <section class="box set" aria-labelledby="htp">
+      <h2 id="htp">Players</h2>
+      <textarea class="copybox tn-ta" id="tNames" rows="8" aria-label="Player names, one per line" placeholder="One name per line, seed 1 first. 2 to 32 players."></textarea>
+      <p class="hint" id="tCount">0 / 32 players</p>
+      <div class="row">
+        <button class="btn" data-t="build" id="tBuild">Build bracket</button>
+        <button class="btn" data-t="shuffle">Shuffle list</button>
+        <button class="btn danger" data-t="clear" id="tClear">Clear</button>
+      </div>
+      <p class="hint" id="tMsg" role="status"></p>
+      <p class="hint">Line order is seed order: line 1 is seed 1. Tap a name in a match to advance it; tap it again to undo.</p>
+    </section>
+    <section class="box" aria-labelledby="htb">
+      <h2 id="htb">Bracket</h2>
+      <div id="tBracket"></div>
+    </section>
   </div>
 </div>
 
@@ -285,6 +340,11 @@ output { display: block; }
       <div id="games"></div>
       <div class="row"><button class="btn danger" data-a="cleargames" id="clearGames">Clear previous games</button></div>
     </section>
+    <section class="box set" aria-labelledby="htour">
+      <h2 id="htour">Tournament</h2>
+      <button class="btn" data-t="open">Open bracket</button>
+      <p class="hint">Single elimination, 2 to 32 players. When the field is not a power of two, the top seeds get byes.</p>
+    </section>
     <section class="box set premium" aria-labelledby="hhorse">
       <h2 id="hhorse">Premium Add-On</h2>
       <label class="check"><input type="checkbox" id="horse"> <span><span class="price">FREE.99</span> <b>Royal Horse Armor Pack!</b> Outfit your screen in battle-ready barding and let every opponent know you play in style. Hand-forged icon, a purple-and-gold royal theme, gilded side rails, zero real money. It takes up more of your screen, because you can afford it.</span></label>
@@ -304,7 +364,7 @@ output { display: block; }
 <script>
 (function () {
   var KEY = 'pal-duel-tracker-v1';
-  var APP_VERSION = '2.5.1', APP_DATE = '2026-11-06';
+  var APP_VERSION = '2.7.0', APP_DATE = '2026-11-10';
   /* Menu previews of the two layouts (screenshots, 130x260 WebP). Retake them if the board layout changes. */
   var LAYIMG = ['data:image/webp;base64,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', 'data:image/webp;base64,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'];
   var S, hist = [], resetArmed = false, clearArmed = false, last = 0, games = [];
@@ -475,6 +535,11 @@ output { display: block; }
         [523, 659, 784, 1047].forEach(function (f) { tone('triangle', f, 0, t + 0.45, 0.5, 0.16); });
         tone('sine', 1760, 2637, t + 0.45, 0.35, 0.08, 0.3);
       },
+      warn: function () {
+        /* 5-minute warning: three rising beeps, clearly different from the bell. */
+        if (!on()) return; var t = ctx.currentTime;
+        [784, 988, 1175].forEach(function (f, i) { tone('square', f, 0, t + i * 0.2, 0.14, 0.16); tone('triangle', f * 2, 0, t + i * 0.2, 0.14, 0.07); });
+      },
       spooky: function (up) {
         if (!on()) return; var t = ctx.currentTime, d = up ? 1.5 : 0.8;
         [0, 7].forEach(function (c, k) {
@@ -505,7 +570,7 @@ output { display: block; }
     S.clock.ms = Math.max(0, S.clock.ms - (now - last)); last = now;
   }
   function paintRound() {
-    var el = $('roundClock'), t = fmt(S.clock.ms), c = 'rclock' + (S.clock.running ? ' running' : '') + (S.clock.ms <= 60000 ? ' low' : '');
+    var el = $('roundClock'), t = fmt(S.clock.ms), c = 'rclock' + (S.clock.running ? ' running' : '') + (S.clock.ms <= 60000 ? ' low' : '') + (S.clock.ms <= WARN_MS ? ' warn' : '');
     if (el.textContent !== t) el.textContent = t;
     if (el.className !== c) el.className = c;
   }
@@ -513,6 +578,7 @@ output { display: block; }
     if (!S.clock.running) return;
     accrue();
     if (S.clock.ms === 0) { S.clock.running = false; logit('Round timer ended'); save(); render(); return; }
+    if (!S.clock.warned && S.clock.ms <= WARN_MS) { S.clock.warned = true; warnNow(); }
     paintRound();
     if (Date.now() - lastSave > 5000) save();
   }, 250);
@@ -566,35 +632,47 @@ output { display: block; }
     $('board').innerHTML = S.players.map(panelHTML).join('');
     $('clockBtn').textContent = S.clock.running ? 'Pause' : 'Start';
   }
+  /* Each Menu section is rebuilt only when its own data changed (its key differs), not on every tap.
+     A section that was emptied (innerHTML = '') always rebuilds. */
+  function part(el, key, build) {
+    if (el._k === key && el.firstChild) return;
+    el.innerHTML = build(); el._k = key;
+  }
   function renderMenu() {
-
-    $('log').innerHTML = S.log.length
+    var logHTML = S.log.length
       ? lis(S.log)
       : '<li class="empty">No changes yet. Adjust life or a counter to start the log.</li>';
+    part($('log'), logHTML, function () { return logHTML; });
 
     var ed = $('counterEditor');
-    if (!ed.contains(document.activeElement)) {
-      ed.innerHTML = S.counters.map(function (c) {
+    if (!ed.contains(document.activeElement)) part(ed, JSON.stringify(S.counters), function () {
+      return S.counters.map(function (c) {
         return '<div class="row"><input type="text" data-rename="' + c.id + '" value="' + esc(c.name) + '" aria-label="Counter name" maxlength="24">' +
           '<button class="btn" data-a="delcounter" data-c="' + c.id + '" aria-label="Remove counter ' + esc(c.name) + '">Remove</button></div>';
       }).join('');
-    }
-    $('palettes').innerHTML = S.players.map(function (p, i) {
-      return '<div class="who">' + esc(p.name) + ' color</div><div class="swatches">' + PALS.map(function (x) {
-        return '<button class="sw s-' + x[0] + '" data-a="pal" data-p="' + i + '" data-pal="' + x[0] + '" aria-pressed="' + (p.pal === x[0]) + '"><i></i>' + x[1] + '</button>';
+    });
+    part($('palettes'), JSON.stringify([S.players.map(function (p) { return [p.name, p.pal]; }), S.dice, S.dstyle]), function () {
+      return S.players.map(function (p, i) {
+        return '<div class="who">' + esc(p.name) + ' color</div><div class="swatches">' + PALS.map(function (x) {
+          return '<button class="sw s-' + x[0] + '" data-a="pal" data-p="' + i + '" data-pal="' + x[0] + '" aria-pressed="' + (p.pal === x[0]) + '"><i></i>' + x[1] + '</button>';
+        }).join('') + '</div>';
+      }).join('') + '<div class="who">Dice color <span class="dprev" aria-hidden="true">' + dieSVG(5) + dieSVG(2) + '</span></div><div class="swatches">' + PALS.map(function (x) {
+        return '<button class="sw s-' + x[0] + '" data-a="dicecolor" data-pal="' + x[0] + '" aria-pressed="' + (S.dice === x[0]) + '"><i></i>' + x[1] + '</button>';
+      }).join('') + '</div><div class="who">Dice style</div><div class="swatches five">' + DSTYLES.map(function (x) {
+        return '<button class="sw" data-a="dicestyle" data-st="' + x[0] + '" aria-pressed="' + (S.dstyle === x[0]) + '">' + dieSVG(5, x[0]) + x[1] + '</button>';
       }).join('') + '</div>';
-    }).join('') + '<div class="who">Dice color <span class="dprev" aria-hidden="true">' + dieSVG(5) + dieSVG(2) + '</span></div><div class="swatches">' + PALS.map(function (x) {
-      return '<button class="sw s-' + x[0] + '" data-a="dicecolor" data-pal="' + x[0] + '" aria-pressed="' + (S.dice === x[0]) + '"><i></i>' + x[1] + '</button>';
-    }).join('') + '</div><div class="who">Dice style</div><div class="swatches five">' + DSTYLES.map(function (x) {
-      return '<button class="sw" data-a="dicestyle" data-st="' + x[0] + '" aria-pressed="' + (S.dstyle === x[0]) + '">' + dieSVG(5, x[0]) + x[1] + '</button>';
-    }).join('') + '</div>';
-    $('layouts').innerHTML = [1, 2].map(function (n) {
-      return '<button data-a="layout" data-l="' + n + '" aria-pressed="' + ((S.layout || 1) === n) + '">' + '<img src="' + LAYIMG[n - 1] + '" alt="" width="130" height="260"><span>' + ['jaybl\uD83E\uDE78\uD83E\uDE78d', 'Icarys'][n - 1] + '</span></button>';
-    }).join('');
-    $('games').innerHTML = games.length ? games.map(function (g, gi) {
-      return '<details class="game"><summary><b>' + esc(stamp(g.t)) + '</b><span>' + esc(g.players[0].name) + ' ' + g.players[0].life + ' \u2013 ' + g.players[1].life + ' ' + esc(g.players[1].name) + '</span></summary>' +
-        '<ul class="log" data-g="' + gi + '"></ul><div class="row"><button class="btn" data-a="copylog" data-g="' + gi + '">Copy log</button></div><textarea class="copybox" readonly hidden rows="8" aria-label="Log text"></textarea></details>';
-    }).join('') : '<p class="empty">No saved games yet. The log of each game is saved here when you tap New game.</p>';
+    });
+    part($('layouts'), String(S.layout || 1), function () {
+      return [1, 2].map(function (n) {
+        return '<button data-a="layout" data-l="' + n + '" aria-pressed="' + ((S.layout || 1) === n) + '">' + '<img src="' + LAYIMG[n - 1] + '" alt="" width="130" height="260"><span>' + ['jaybl\uD83E\uDE78\uD83E\uDE78d', 'Icarys'][n - 1] + '</span></button>';
+      }).join('');
+    });
+    part($('games'), games.length + '|' + (games.length ? games[0].t + '|' + games[games.length - 1].t : ''), function () {
+      return games.length ? games.map(function (g, gi) {
+        return '<details class="game"><summary><b>' + esc(stamp(g.t)) + '</b><span>' + esc(g.players[0].name) + ' ' + g.players[0].life + ' \u2013 ' + g.players[1].life + ' ' + esc(g.players[1].name) + '</span></summary>' +
+          '<ul class="log" data-g="' + gi + '"></ul><div class="row"><button class="btn" data-a="copylog" data-g="' + gi + '">Copy log</button></div><textarea class="copybox" readonly hidden rows="8" aria-label="Log text"></textarea></details>';
+      }).join('') : '<p class="empty">No saved games yet. The log of each game is saved here when you tap New game.</p>';
+    });
     $('clearGames').hidden = !games.length;
     $('clearGames').textContent = clearArmed ? 'Tap again to confirm' : 'Clear previous games';
     if (document.activeElement !== $('clockMin')) $('clockMin').value = S.clock.minutes;
@@ -667,6 +745,113 @@ output { display: block; }
     })();
   }
 
+  /* ---- 5-minute warning ----
+     Fires once when the round timer first reaches 5:00. Starting a timer that is already at or under 5:00 does not fire it. */
+  var WARN_MS = 300000, warnTimer = null;
+  function warnNow() {
+    SFX.warn();
+    try { if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 200]); } catch (e) {}
+    var el = $('warnflash');
+    el.firstChild.textContent = S.clock.ms >= WARN_MS - 10000 ? '5 minutes left' : fmt(S.clock.ms) + ' left';
+    el.hidden = false; el.classList.remove('go'); void el.offsetWidth; el.classList.add('go');
+    clearTimeout(warnTimer); warnTimer = setTimeout(function () { el.hidden = true; el.classList.remove('go'); }, 6000);
+    save();
+  }
+
+  /* ---- Tournament bracket ----
+     Single elimination, 2 to 32 players, stored under its own key so New game and Undo never touch it.
+     Match sides: a player index, -1 = bye (round 1 only), null = not decided yet. */
+  var TKEY = KEY + '-tourney', TMAX = 32, T = null, tArmed = '';
+  try { T = JSON.parse(localStorage.getItem(TKEY)); } catch (e) { T = null; }
+  if (!T || !Array.isArray(T.players) || !Array.isArray(T.rounds) || !T.rounds.length) T = null;
+  /* tourney-core:start */
+  function real(x) { return typeof x === 'number' && x >= 0; }
+  function tOrder(size) { var o = [1]; while (o.length < size) { var n = o.length * 2 + 1; o = o.reduce(function (r, x) { r.push(x, n - x); return r; }, []); } return o; }
+  function tCalc(t) {
+    t.rounds.forEach(function (rd, r) {
+      rd.forEach(function (m, i) {
+        if (r > 0) { m.a = t.rounds[r - 1][2 * i].w; m.b = t.rounds[r - 1][2 * i + 1].w; }
+        if (m.a === -1 && real(m.b)) m.w = m.b;
+        else if (m.b === -1 && real(m.a)) m.w = m.a;
+        else if (m.w !== null && !(real(m.a) && real(m.b) && (m.w === m.a || m.w === m.b))) m.w = null;
+      });
+    });
+  }
+  function tBuild(names) {
+    var n = names.length, size = 2, i, ord, r0 = [], rounds;
+    while (size < n) size *= 2;
+    ord = tOrder(size);
+    for (i = 0; i < size; i += 2) r0.push({ a: ord[i] <= n ? ord[i] - 1 : -1, b: ord[i + 1] <= n ? ord[i + 1] - 1 : -1, w: null });
+    rounds = [r0];
+    for (var m = size / 2; m > 1; m /= 2) { var rr = []; for (var j = 0; j < m / 2; j++) rr.push({ a: null, b: null, w: null }); rounds.push(rr); }
+    var t = { players: names, rounds: rounds, made: Date.now() };
+    tCalc(t); return t;
+  }
+  function tPick(t, r, i, s) {
+    var m = t.rounds[r] && t.rounds[r][i]; if (!m || !real(m.a) || !real(m.b)) return;
+    var who = s ? m.b : m.a; m.w = m.w === who ? null : who; tCalc(t);
+  }
+  /* tourney-core:end */
+  function tSave() { try { localStorage.setItem(TKEY, JSON.stringify(T)); } catch (e) {} }
+  function tHasResults() { return !!T && T.rounds.some(function (rd) { return rd.some(function (m) { return real(m.a) && real(m.b) && real(m.w); }); }); }
+  function rnd(n) {
+    if (window.crypto && crypto.getRandomValues) { var a = new Uint32Array(1), lim = 4294967296 - (4294967296 % n); do { crypto.getRandomValues(a); } while (a[0] >= lim); return a[0] % n; }
+    return Math.floor(Math.random() * n);
+  }
+  function tNames() { return $('tNames').value.split('\n').map(function (x) { return x.trim().slice(0, 24); }).filter(Boolean); }
+  function tRoundName(c) { return c === 2 ? 'Final' : c === 4 ? 'Semifinals' : c === 8 ? 'Quarterfinals' : 'Round of ' + c; }
+  function tSlot(m, r, i, s) {
+    var id = s ? m.b : m.a, can = real(m.a) && real(m.b), nm = id === -1 ? 'Bye' : real(id) && T.players[id] !== undefined ? esc(T.players[id]) : 'TBD';
+    var cls = 'tn-slot' + (real(id) && m.w === id ? ' win' : '') + (real(m.w) && m.w !== id ? ' lose' : '') + (id === -1 ? ' bye' : '') + (id === null ? ' tbd' : '');
+    return '<button class="' + cls + '" data-t="pick" data-r="' + r + '" data-i="' + i + '" data-s="' + s + '"' + (can ? '' : ' disabled') + '>' +
+      '<i>' + (real(id) ? id + 1 : '') + '</i><span>' + nm + '</span></button>';
+  }
+  function tCountPaint() { var n = tNames().length; $('tCount').textContent = n + ' / ' + TMAX + ' players' + (n > TMAX ? ' (too many)' : ''); }
+  function tRender(msg) {
+    var box = $('tBracket'), tree = box.querySelector('.tn-tree'), x = tree ? tree.scrollLeft : 0, out = '';
+    tCountPaint();
+    $('tBuild').textContent = tArmed === 'build' ? 'Tap again to replace bracket' : T ? 'Rebuild bracket' : 'Build bracket';
+    $('tClear').textContent = tArmed === 'clear' ? 'Tap again to clear' : 'Clear';
+    $('tMsg').textContent = msg || '';
+    if (!T) out = '<p class="empty">No bracket yet. Enter 2 to 32 names, then tap Build bracket.</p>';
+    else {
+      var size = T.rounds[0].length * 2, last = T.rounds[T.rounds.length - 1][0];
+      if (real(last.w) && T.players[last.w] !== undefined) out += '<div class="tn-champ">Champion: ' + esc(T.players[last.w]) + '</div>';
+      out += '<div class="tn-tree">' + T.rounds.map(function (rd, r) {
+        return '<div class="tn-col"><h3>' + tRoundName(size / Math.pow(2, r)) + '</h3><div class="tn-matches">' + rd.map(function (m, i) {
+          return '<div class="tn-match">' + tSlot(m, r, i, 0) + tSlot(m, r, i, 1) + '</div>';
+        }).join('') + '</div></div>';
+      }).join('') + '</div>';
+    }
+    box.innerHTML = out;
+    tree = box.querySelector('.tn-tree'); if (tree) tree.scrollLeft = x;
+  }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-t]'); if (!b) return;
+    var a = b.dataset.t, ta = $('tNames');
+    if (a !== 'build' && a !== 'clear') tArmed = '';
+    if (a === 'open') { $('tsheet').hidden = false; if (!ta.value && T) ta.value = T.players.join('\n'); tRender(); $('tsheet').scrollTop = 0; return; }
+    if (a === 'close') { $('tsheet').hidden = true; return; }
+    if (a === 'pick') { tPick(T, +b.dataset.r, +b.dataset.i, +b.dataset.s); tSave(); tRender(); return; }
+    if (a === 'shuffle') {
+      var l = tNames(), k, j, tmp;
+      for (k = l.length - 1; k > 0; k--) { j = rnd(k + 1); tmp = l[k]; l[k] = l[j]; l[j] = tmp; }
+      ta.value = l.join('\n'); tRender('List shuffled. Tap Build bracket to seed it in this order.'); return;
+    }
+    if (a === 'build') {
+      var names = tNames();
+      if (names.length < 2) { tRender('Add at least 2 players, one per line.'); return; }
+      if (names.length > TMAX) { tRender('Maximum is ' + TMAX + ' players; you have ' + names.length + '.'); return; }
+      if (tHasResults() && tArmed !== 'build') { tArmed = 'build'; tRender('This discards the results entered so far.'); return; }
+      tArmed = ''; T = tBuild(names); tSave(); tRender('Bracket built: ' + names.length + ' players.'); return;
+    }
+    if (a === 'clear') {
+      if (tHasResults() && tArmed !== 'clear') { tArmed = 'clear'; tRender('This discards the bracket and its results.'); return; }
+      tArmed = ''; T = null; ta.value = ''; try { localStorage.removeItem(TKEY); } catch (e) {} tRender();
+    }
+  });
+  $('tNames').addEventListener('input', tCountPaint);
+
   document.addEventListener('pointerdown', function () { SFX.unlock(); }, { once: true });
   document.addEventListener('click', function (e) {
     var b = e.target.closest('[data-a]'); if (!b) return;
@@ -718,8 +903,9 @@ output { display: block; }
       p.pal = b.dataset.pal;
     } else if (a === 'clock') {
       if (S.clock.running) { S.clock.running = false; SFX.bell(2); }
-      else if (S.clock.ms > 0) { S.clock.running = true; last = Date.now(); SFX.bell(1); }
+      else if (S.clock.ms > 0) { S.clock.running = true; last = Date.now(); SFX.bell(1); if (S.clock.ms <= WARN_MS) S.clock.warned = true; }
     } else if (a === 'clockreset') {
+      S.clock.warned = false;
       S.clock.running = false;
       S.clock.ms = S.clock.minutes * 60000;
     } else if (a === 'undo') {
@@ -779,13 +965,25 @@ output { display: block; }
   $('newCounter').addEventListener('keydown', function (e) {
     if (e.key === 'Enter') document.querySelector('[data-a="addcounter"]').click();
   });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { $('sheet').hidden = true; $('roll').hidden = true; clearTimeout(rollTimer); } });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    if (!$('tsheet').hidden) { $('tsheet').hidden = true; return; }
+    $('sheet').hidden = true; $('roll').hidden = true; clearTimeout(rollTimer);
+  });
 
   function flush() { accrue(); save(); }
   document.addEventListener('visibilitychange', function () { if (document.hidden) flush(); });
   addEventListener('pagehide', flush);
 
   $('ver').textContent = 'PAlamo Life Tracker v' + APP_VERSION + ' \u00B7 ' + APP_DATE;
+  /* Offline: sw.js keeps a copy of this page and the fonts on the device. Browsers only allow it over https (or localhost),
+     not when index.html is opened straight from a folder. "Offline ready" appears once the copy is saved. */
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+    try {
+      navigator.serviceWorker.register('sw.js').catch(function () {});
+      navigator.serviceWorker.ready.then(function () { $('ver').textContent += ' \u00B7 Offline ready'; }).catch(function () {});
+    } catch (e) {}
+  }
 
   render();
 })();
