@@ -5,6 +5,19 @@ Versions before 1.0 were test builds (0.1.0 to 0.2.3).
 
 The running version is shown at the bottom of the in-app Menu and on the first line of every copied game log.
 
+## [2.8.0] - 2026-11-23
+### Added
+- **Two new layouts, and every layout now has its own color palette.** Menu > Layout has four choices, shown in a 2×2 grid with updated previews:
+  - **Jaybl🩸🩸d**: unchanged, keeps the original dark teal colors.
+  - **Icarys**: same tiles as before, now on a warm graphite background with a violet tint.
+  - **Palify** (new), matched to palify.org/tools/counter at phone and desktop sizes: a row of "− icon 0 +" steppers (Material first, illustrated log and apple icons) above a life box with a red heart, a small LIFE label and a 48 px number (72 px on wide screens). Each stepper and the life box are split down the middle: tap the left half for −, the right half for +. No player-name header, like Palify (names still show in the log). Navy background with a blue glow and stars, Fraunces numbers, Hanken Grotesk text, 12 px page margins. The strip matches Palify's: timer and Day/Night on the left, a gold Start/Pause pill centered, then round dice, undo and settings (gear) buttons, all 40 px. On wide screens the players stay stacked in a 720 px column instead of side by side. Palify's "Add Pals, gear, structures" field area is not included, so the life box fills that space.
+  - **Palworldtcg.gg** (new), modeled on palworldtcg.gg/tools/tracker: one column per resource in the order Material, Life, Ingredient, then any extra counters. Each column has + and +3 on top (Life has + only), the number and its icon in the middle, and − at the bottom. Life is outlined in dark red. Gray card-stock colors a step darker than the site, heavy near-black numbers, brown +3, a yellow Night button and small uppercase buttons.
+- The **Royal Horse Armor Pack** (FREE.99) is still the one setting that changes the colors everywhere: when it is on, its purple and gold replace whichever layout's palette is showing.
+- **Local SA Events link** in the Menu, between New game and Layout. It opens the San Antonio Pal Tracker page in a new tab.
+- Fonts `fraunces-latin-600/900-normal.woff2` and `hanken-grotesk-latin-400/700-normal.woff2` (SIL OFL, licenses in `fonts/`), about 63 KB, used by the Palify layout. `sw.js` adds them to the offline copy, so on the hosted site every device downloads them once and Palify works with no connection.
+### Notes
+- No Palify or palworldtcg.gg logos, mascots or artwork are copied. The Palify stars are drawn in CSS.
+
 ## [2.7.0] - 2026-11-10
 ### Added
 - **Works offline.** A new file, `sw.js`, saves a copy of the app and its fonts on the device the first time it is opened online. After that the app opens with no connection. The version line at the bottom of the Menu shows "Offline ready" once the copy is saved. When online, the newest release still loads first; if the connection fails or has not answered within 3 seconds, the saved copy opens instead and the newer one is saved for next time. This needs the hosted site (https); it does nothing when `index.html` is opened straight from a folder.

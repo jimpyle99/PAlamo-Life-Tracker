@@ -17,6 +17,10 @@
 <style>
 @font-face { font-family: "DM Sans"; font-style: normal; font-weight: 400; font-display: swap; src: url(fonts/dm-sans-latin-400-normal.woff2) format("woff2"); }
 @font-face { font-family: "DM Sans"; font-style: normal; font-weight: 700; font-display: swap; src: url(fonts/dm-sans-latin-700-normal.woff2) format("woff2"); }
+@font-face { font-family: "Fraunces"; font-style: normal; font-weight: 600; font-display: swap; src: url(fonts/fraunces-latin-600-normal.woff2) format("woff2"); }
+@font-face { font-family: "Fraunces"; font-style: normal; font-weight: 900; font-display: swap; src: url(fonts/fraunces-latin-900-normal.woff2) format("woff2"); }
+@font-face { font-family: "Hanken Grotesk"; font-style: normal; font-weight: 400; font-display: swap; src: url(fonts/hanken-grotesk-latin-400-normal.woff2) format("woff2"); }
+@font-face { font-family: "Hanken Grotesk"; font-style: normal; font-weight: 700; font-display: swap; src: url(fonts/hanken-grotesk-latin-700-normal.woff2) format("woff2"); }
 @font-face { font-family: "Bricolage Grotesque"; font-style: normal; font-weight: 800; font-display: swap; src: url(fonts/bricolage-grotesque-latin-800-normal.woff2) format("woff2"); }
 * { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 /* Layout: one-screen app. Player 1 panel on top, a slim control strip in the middle, Player 2 panel below.
@@ -31,6 +35,7 @@
   --tok-life: #1d1d24; --tok-mat: #d4572e; --tok-ing: #5a9a16; --tok-gen: #5b6b7d;
   --font-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
   --font-body: "DM Sans", "Segoe UI", system-ui, sans-serif;
+  --tile: color-mix(in srgb, var(--surface-2) 70%, transparent); --tline: var(--line);
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -180,7 +185,7 @@ output { display: block; }
 .seg { display: flex; gap: 8px; }
 .seg button { flex: 1; min-height: 48px; border: 2px solid var(--line); border-radius: 10px; background: var(--surface); font-weight: 700; }
 #layouts button { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 10px 8px; }
-#layouts img { display: block; width: 100%; max-width: 110px; height: auto; aspect-ratio: 1 / 2; border-radius: 8px; border: 1px solid var(--line); }
+#layouts img { display: block; width: 100%; max-width: 110px; min-width: 0; height: auto; aspect-ratio: 1 / 2; border-radius: 8px; border: 1px solid var(--line); }
 .seg button[aria-pressed="true"] { border-color: var(--fg); }
 .panel.l2 { grid-template-rows: auto minmax(0, 1fr); }
 .row3 { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; min-height: 0; }
@@ -228,6 +233,166 @@ output { display: block; }
 .warnflash.go { animation: warnpulse .8s ease-in-out 4; }
 @keyframes warnpulse { 0%, 100% { opacity: .3; } 50% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .warnflash.go { animation: none; } }
+/* Palify look (Palify layout): night-sky navy with a soft blue glow and stars, serif numbers (Fraunces), pill buttons,
+   a gold center button, and outlined tiles. Modeled on the life counter at palify.org/tools/counter.
+   Applied when the Palify layout is picked (root class .palify). */
+:root.palify {
+  --bg: #081f3b; --surface: #0b2848; --surface-2: #163a63; --fg: #f5f8ff; --muted: #93acc9;
+  --line: #2c4d70; --danger: #ff6b7d; --moon: #eecb4f; --warn: #ffb347;
+  --tile: rgba(19, 48, 82, .92); --tline: rgba(130, 183, 221, .28); --pink: #ff7a8f; --cream: #eeeadf;
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-body: "Hanken Grotesk", "Segoe UI", system-ui, sans-serif;
+  background: #081f3b;
+}
+:root.palify body { background: radial-gradient(130% 70% at 50% -8%, rgba(42, 127, 196, .62) 0%, rgba(23, 89, 150, .28) 42%, transparent 72%), #081f3b; }
+:root.palify body::before { content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .7;
+  background-image:
+    radial-gradient(1.6px 1.6px at 24px 36px, rgba(255, 255, 255, .8), transparent 70%),
+    radial-gradient(1.2px 1.2px at 130px 90px, rgba(255, 255, 255, .6), transparent 70%),
+    radial-gradient(2px 2px at 70px 160px, rgba(255, 255, 255, .5), transparent 70%),
+    radial-gradient(1px 1px at 200px 40px, rgba(255, 255, 255, .7), transparent 70%),
+    radial-gradient(1.4px 1.4px at 260px 210px, rgba(255, 255, 255, .45), transparent 70%);
+  background-size: 180px 180px, 240px 240px, 300px 300px, 330px 330px, 390px 390px; }
+:root.palify .app { position: relative; z-index: 1; }
+:root.palify .btn { border-radius: 999px; border: 2px solid var(--tline); background: rgba(11, 40, 72, .7); }
+:root.palify .btn:hover { background: var(--surface-2); }
+:root.palify .btn.danger { border-color: var(--danger); }
+:root.palify .newgame .btn.danger { background: var(--danger); color: #fff; }
+:root.palify .panel { border: 0; border-radius: 14px; background: var(--surface); box-shadow: 0 6px 24px rgba(0, 0, 0, .25); }
+:root.palify .name { border-bottom-color: var(--tline); font-weight: 900; }
+:root.palify .box { background: var(--surface); border-color: var(--tline); border-radius: 14px; }
+:root.palify .sheet { background: radial-gradient(130% 50% at 50% -8%, rgba(42, 127, 196, .45), transparent 70%), var(--bg); }
+:root.palify .sheethead h1 { font-weight: 900; font-size: 2rem; text-transform: uppercase; letter-spacing: .02em; color: var(--cream);
+  text-shadow: 0 1px 0 #845410, 0 2px 0 #72480c, 0 3px 0 #5f3c09, 0 5px 10px rgba(0, 0, 0, .4); }
+:root.palify .sw, :root.palify .seg button { border-color: var(--tline); border-radius: 12px; }
+:root.palify .rollcard { border-radius: 14px; }
+:root.palify .lmid output, :root.palify .big output, :root.palify .token output, :root.palify .pfc output, :root.palify .pfl output { font-weight: 600; }
+/* Control strip: [clock] [Day/Night] ... [gold Start] ... [dice] [undo] [menu] on one row. */
+:root.palify body { padding-left: max(12px, env(safe-area-inset-left, 0px)); padding-right: max(12px, env(safe-area-inset-right, 0px)); }
+/* Strip like palify.org: left group (timer, Day/Night), gold button centered by auto margins, right group (dice, undo, settings). */
+:root.palify .strip { display: flex; align-items: center; gap: 8px; }
+:root.palify .strip .sr { display: contents; }
+:root.palify .strip .rwrap { order: 1; }
+:root.palify .strip .info { order: 2; height: auto; }
+:root.palify #clockBtn { order: 3; margin-inline: auto; width: auto; min-width: 93px; min-height: 44px; padding: 0 16px; font-size: 14px; border-radius: 999px;
+  border: 2px solid color-mix(in srgb, var(--moon) 50%, transparent); background: color-mix(in srgb, var(--moon) 10%, transparent); }
+:root.palify #clockBtn:hover { background: color-mix(in srgb, var(--moon) 18%, transparent); }
+:root.palify .strip .rollbtn { order: 4; }
+:root.palify #undoBtn { order: 5; }
+:root.palify .strip [data-a="menu"] { order: 6; }
+:root.palify .strip .rollbtn, :root.palify #undoBtn, :root.palify .strip [data-a="menu"] { flex: none; width: 40px; height: 40px; min-height: 0; padding: 0; border-radius: 50%; display: grid; place-items: center;
+  border: 2px solid rgba(245, 248, 255, .2); background: #0b2848; }
+:root.palify .strip .rollbtn svg { width: 20px; height: 20px; }
+.sr .ic { display: none; width: 20px; height: 20px; }
+:root.palify .sr .ic { display: block; }
+:root.palify .sr .tx { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+:root.palify .rwrap .rclock { writing-mode: horizontal-tb; transform: none; font-size: 14px; padding: 0 12px; height: 40px; display: grid; place-items: center; border-radius: 999px; border: 2px solid rgba(245, 248, 255, .2); background: #0b2848; }
+:root.palify .rclock.running { background: var(--moon); border-color: var(--moon); color: var(--bg); }
+:root.palify .rclock.running.warn { background: var(--warn); border-color: var(--warn); }
+:root.palify .rclock.running.low { background: var(--danger); border-color: var(--danger); }
+.pfnight { flex: none; display: flex; align-items: center; gap: 7px; height: 40px; padding: 0 14px 0 11px; border-radius: 999px; border: 2px solid rgba(245, 248, 255, .2); background: #0b2848; font-size: 13px; font-weight: 700; }
+.pfnight svg { width: 18px; height: 18px; flex: none; }
+.pfnight[aria-pressed="true"] { border-color: var(--moon); color: var(--moon); background: color-mix(in srgb, var(--moon) 12%, #0b2848); }
+@media (max-width: 639px) {
+  :root.palify .strip { gap: 6px; }
+  :root.palify .rwrap .rclock { padding: 0 9px; font-size: 13px; }
+  .pfnight { width: 46px; padding: 0; justify-content: center; }
+  .pfnight span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+}
+@media (max-width: 380px) {
+  :root.palify .strip { gap: 4px; }
+  .pfnight { width: 40px; }
+  :root.palify .rwrap .rclock { padding: 0 7px; font-size: 12px; }
+  :root.palify #clockBtn { min-width: 0; padding: 0 12px; }
+}
+/* Like palify.org, the Palify layout stays stacked (player, strip, player) and 720 px wide on wide screens too. */
+@media (min-width: 721px) and (orientation: landscape) {
+  :root.palify .app { max-width: 720px; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto minmax(0, 1fr); }
+  :root.palify .strip { grid-row: 2; grid-column: 1; }
+  :root.palify .panel.p0 { grid-row: 1; grid-column: 1; }
+  :root.palify .panel.p1 { grid-row: 3; grid-column: 1; }
+}
+/* Palify layout (layout 3): a row of steppers (Material first), then the life box. No name header, like palify.org.
+   Sizes match palify.org/tools/counter: 46 px steppers with 30 px numbers and 24 px icons; life box with a 34 px heart,
+   9 px LIFE label and a 48 px number (72 px from 640 px wide). Each box is split into an invisible left half (-) and right half (+). */
+.panel.pf { grid-template-rows: 46px minmax(0, 1fr); gap: 8px; }
+:root.palify .panel.pf { padding: 12px; }
+.panel.pf .head { display: none; }
+.pfs { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; min-height: 0; }
+.pfc, .pfl { position: relative; display: grid; align-items: center; border: 2px solid var(--tline); border-radius: 12px; background: var(--tile); min-height: 0; min-width: 0; overflow: hidden; user-select: none; -webkit-user-select: none; }
+.pfc { grid-template-columns: 20px minmax(0, 1fr) 20px; padding: 6px; }
+.pfl { grid-template-columns: 32px minmax(0, 1fr) 32px; padding: 10px; }
+.pfh { position: absolute; top: 0; bottom: 0; width: 50%; border: 0; padding: 0; background: transparent; }
+.pfh.l { left: 0; } .pfh.r { right: 0; }
+.pfh:active { background: rgba(255, 255, 255, .06); }
+@media (hover: hover) { .pfh:hover { background: rgba(255, 255, 255, .04); } }
+.sg { position: relative; text-align: center; font-weight: 700; line-height: 1; color: rgba(139, 173, 207, .6); pointer-events: none; }
+.pfc .sg { font-size: 16px; } .pfl .sg { font-size: 24px; }
+.pfc .mid { position: relative; display: flex; align-items: center; justify-content: center; gap: 8px; min-width: 0; pointer-events: none; }
+.pfc .ico { width: 24px; height: 24px; flex: none; display: block; }
+.pfc .cn { font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: #8badcf; max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pfc output { font-family: var(--font-display); font-weight: 600; font-size: 30px; line-height: 1; font-variant-numeric: tabular-nums; color: var(--fg); }
+.pfl .mid { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; pointer-events: none; min-height: 0; }
+.pfl .heart { width: 34px; height: 34px; display: block; }
+.pfl .lab { font-size: 9px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: #8badcf; }
+.pfl output { font-family: var(--font-display); font-weight: 600; font-size: 48px; letter-spacing: -.015em; line-height: 1; font-variant-numeric: tabular-nums; color: var(--fg); }
+.pfl output.low { color: var(--danger); }
+@media (min-width: 640px) { .pfl output { font-size: 72px; } .pfl .heart { width: 40px; height: 40px; } }
+/* Palworldtcg.gg layout (layout 4): one column per resource, Material | Life | Ingredient | extras.
+   Each column: a top bar with + and +3 (Life has + only), the number with its icon, and a bottom bar with -. Modeled on palworldtcg.gg/tools/tracker. */
+.panel.tg { grid-template-rows: auto minmax(0, 1fr); }
+.tgrow { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; min-height: 0; }
+.tgc { container-type: size; display: grid; grid-template-rows: minmax(34px, 15%) minmax(0, 1fr) minmax(34px, 15%); min-height: 0; min-width: 0; overflow: hidden;
+  border: 1px solid var(--tline); border-radius: 12px; background: var(--tile); user-select: none; -webkit-user-select: none; }
+.tgc.tlife { border: 2px solid color-mix(in srgb, var(--danger) 80%, transparent); }
+.tgbar { display: flex; min-height: 0; }
+.tgbar.top { border-bottom: 1px solid var(--tline); }
+.tgbar.bot { border-top: 1px solid var(--tline); }
+.tgbar button { flex: 1; min-width: 0; border: 0; padding: 0; background: transparent; color: var(--fg); font-family: var(--font-display); font-weight: 800; font-size: clamp(1.1rem, 20cqw, 1.6rem); line-height: 1; }
+.tgbar button + button { border-left: 1px solid var(--tline); }
+.tgbar button.p3 { color: var(--moon); }
+.tgbar button:active { background: color-mix(in srgb, var(--fg) 12%, transparent); }
+@media (hover: hover) { .tgbar button:hover { background: color-mix(in srgb, var(--fg) 7%, transparent); } }
+.tgv { display: flex; align-items: center; justify-content: center; gap: min(5cqw, 8px); min-height: 0; pointer-events: none; }
+.tgv .disc { width: min(26cqw, 13cqh, 34px); }
+.tgv .heart { width: min(24cqw, 12cqh, 34px); height: auto; color: #e8323f; flex: none; }
+.tgv output { font-family: var(--font-display); font-weight: 800; font-size: min(34cqw, 17cqh, 4.4rem); line-height: 1; font-variant-numeric: tabular-nums; color: var(--fg); }
+.tgv output.low { color: var(--danger); }
+:root.palify .tgv output { font-weight: 600; }
+#layouts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+#layouts span { overflow-wrap: anywhere; }
+/* Layout 2 under Palify: outlined tiles. */
+:root.palify .big { background: var(--tile); border: 2px solid var(--tline); border-radius: 12px; }
+:root.palify .big output { color: var(--fg); }
+:root.palify .big output.low { color: var(--danger); }
+/* Icarys look (Icarys layout): warm graphite with a soft violet cast, so the colored tiles stand out. */
+:root.icarys {
+  --bg: #16141b; --surface: #211e27; --surface-2: #2e2a36; --fg: #f1edf5; --muted: #aaa1b6;
+  --line: #3f3949; --moon: #f0c987; background: #16141b;
+}
+:root.icarys body { background: #16141b; }
+/* Palworldtcg.gg look (Palworldtcg.gg layout): gray card stock, a step darker than the site, near-black heavy numbers, brown +3, dark red life outline,
+   yellow day/night button. Modeled on palworldtcg.gg/tools/tracker. */
+:root.tcg {
+  --bg: #979b93; --surface: #bbbeb7; --surface-2: #a5a9a1; --fg: #14171a; --muted: #3d433d;
+  --line: #858a80; --danger: #a81f24; --moon: #6d4300; --warn: #b26a00;
+  --tile: #a5a9a1; --tline: #858a80;
+  color-scheme: light; background: #979b93;
+}
+:root.tcg body { background: #979b93; }
+:root.tcg .panel { border: 1px solid var(--line); border-radius: 12px; }
+:root.tcg .name { color: color-mix(in srgb, var(--c) 50%, #000); }
+:root.tcg .btn { border-radius: 10px; text-transform: uppercase; letter-spacing: .12em; font-size: .72rem; }
+:root.tcg .rwrap .rclock { writing-mode: horizontal-tb; transform: none; font-size: 1.5rem; padding: 4px 10px; background: var(--surface); border: 1px solid var(--line); }
+:root.tcg .rclock.running { background: var(--moon); color: #fff; border-color: var(--moon); }
+:root.tcg .nightbtn { background: #e8b923; border-color: #b58c12; }
+:root.tcg .nightbtn .vt, :root.tcg .nightbtn[aria-pressed="false"] .vt { color: #3a2a00; }
+:root.tcg .moon { color: #3a3f45; }
+:root.tcg .row input[type=text], :root.tcg .row input[type=number], :root.tcg .copybox { background: #d2d5cf; }
+:root.tcg .sheethead h1 { text-transform: uppercase; letter-spacing: .04em; }
+:root.tcg .rollcard { border-color: var(--line); }
+:root.tcg .newgame .btn.danger { color: #fff; }
+.evlink { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 48px; font-size: 1.05rem; text-decoration: none; color: var(--fg); }
 /* Tournament bracket */
 #tsheet { z-index: 21; }
 .sheetin.wide { max-width: none; }
@@ -260,8 +425,8 @@ output { display: block; }
     <button class="btn rollbtn" data-a="roll" aria-label="Roll two six-sided dice"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="display:block"><rect x="3" y="3" width="18" height="18" rx="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="8.5" cy="8.5" r="1.7" fill="currentColor"/><circle cx="12" cy="12" r="1.7" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.7" fill="currentColor"/></svg></button>
     <div class="sr">
       <button class="btn" data-a="clock" id="clockBtn" aria-label="Start or pause the round timer">Start</button>
-      <button class="btn" data-a="undo" id="undoBtn">Undo</button>
-      <button class="btn" data-a="menu">Menu</button>
+      <button class="btn" data-a="undo" id="undoBtn" aria-label="Undo"><span class="tx">Undo</span><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14L4 9l5-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 9h10a6 6 0 0 1 0 12h-3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+      <button class="btn" data-a="menu" aria-label="Menu"><span class="tx">Menu</span><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M19.4 13.5l1.6 1.2-1.8 3.1-1.9-.7a7 7 0 0 1-1.9 1.1l-.3 2h-3.6l-.3-2a7 7 0 0 1-1.9-1.1l-1.9.7-1.8-3.1 1.6-1.2a7 7 0 0 1 0-3l-1.6-1.2 1.8-3.1 1.9.7a7 7 0 0 1 1.9-1.1l.3-2h3.6l.3 2a7 7 0 0 1 1.9 1.1l1.9-.7 1.8 3.1-1.6 1.2a7 7 0 0 1 0 3z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></button>
     </div>
   </div>
 </div>
@@ -306,6 +471,9 @@ output { display: block; }
     <section class="box newgame">
       <button class="btn danger" data-a="reset" id="resetBtn">New game</button>
       <p class="hint" id="resetHint">Resets life to 10, resets the round timer, and restores Ingredient and Material.</p>
+    </section>
+    <section class="box events">
+      <a class="btn evlink" href="https://claude.ai/artifact/QnzVoqrwQAPnqjvYtBap2d" target="_blank" rel="noopener">Local SA Events <span aria-hidden="true">→</span></a>
     </section>
     <section class="box set" aria-labelledby="hlay">
       <h2 id="hlay">Layout</h2>
@@ -364,9 +532,9 @@ output { display: block; }
 <script>
 (function () {
   var KEY = 'pal-duel-tracker-v1';
-  var APP_VERSION = '2.7.0', APP_DATE = '2026-11-10';
-  /* Menu previews of the two layouts (screenshots, 130x260 WebP). Retake them if the board layout changes. */
-  var LAYIMG = ['data:image/webp;base64,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', 'data:image/webp;base64,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'];
+  var APP_VERSION = '2.8.0', APP_DATE = '2026-11-23';
+  /* Menu previews of the four layouts (screenshots, 130x260 WebP). Retake them if the board layout changes. */
+  var LAYIMG = ['data:image/webp;base64,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', 'data:image/webp;base64,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', 'data:image/webp;base64,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', 'data:image/webp;base64,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'];
   var S, hist = [], resetArmed = false, clearArmed = false, last = 0, games = [];
   try { games = JSON.parse(localStorage.getItem(KEY + '-games')) || []; } catch (e) { games = []; }
   try {
@@ -425,6 +593,7 @@ output { display: block; }
   if (!S.flipSet) { S.flip = true; S.flipSet = true; }
   if (typeof S.night !== 'boolean') S.night = false;
   S.horse = !!S.horse;
+  delete S.theme;
   if (!PALS.some(function (x) { return x[0] === S.dice; })) S.dice = 'ice';
   if (!DSTYLES.some(function (x) { return x[0] === S.dstyle; })) S.dstyle = 'plain';
   delete S.turn; delete S.active;
@@ -433,7 +602,7 @@ output { display: block; }
   if (typeof S.clock.minutes !== 'number') S.clock.minutes = 30;
   if (typeof S.clock.ms !== 'number') S.clock.ms = S.clock.minutes * 60000;
   S.clock.running = false;
-  if (S.layout !== 2) S.layout = 1;
+  if ([1, 2, 3, 4].indexOf(S.layout) < 0) S.layout = 1;
   S.players.forEach(function (p, i) {
     delete p.ms;
     if (PAL_MOVED[p.pal]) p.pal = PAL_MOVED[p.pal];
@@ -603,8 +772,54 @@ output { display: block; }
       '</div>' +
       '<div class="row3">' + tiles + '</div></section>';
   }
+  /* Palify-style panel: "- icon 0 +" steppers for each counter, then an outlined life box with a heart. */
+  /* Palify icons, drawn to look like palify.org's illustrated ones (not copied). */
+  var PFI = {
+    mat: '<svg class="ico" viewBox="2 3 20 20" aria-hidden="true"><g transform="rotate(-14 12 12)"><rect x="5" y="8" width="15.5" height="9" rx="2.2" fill="#9a6232"/><path d="M9 10.6h9M10 14.4h8" stroke="#6b401d" stroke-width="1" stroke-linecap="round"/><ellipse cx="5.6" cy="12.5" rx="3" ry="4.5" fill="#e8c38d" stroke="#6b401d" stroke-width="1"/><ellipse cx="5.6" cy="12.5" rx="1.3" ry="2.1" fill="none" stroke="#b5844c" stroke-width=".9"/><circle cx="18" cy="16.5" r="2.2" fill="#9aa6b2" stroke="#5e6872" stroke-width=".8"/></g></svg>',
+    ing: '<svg class="ico" viewBox="2.5 4 19 19" aria-hidden="true"><circle cx="15.5" cy="13" r="5.2" fill="#3e9b35"/><circle cx="9" cy="15" r="6" fill="#e2353a"/><path d="M9.2 9.3c.2-1.9 1.1-3 2.7-3.6" stroke="#5b3a1e" stroke-width="1.3" fill="none" stroke-linecap="round"/><path d="M11.7 5.8c1.3-1.1 3.1-1.1 4-.1-1.3 1.1-3 1.2-4 .1z" fill="#57b947"/><ellipse cx="6.8" cy="12.6" rx="1.3" ry="2" fill="#fff" opacity=".5"/><ellipse cx="17.4" cy="10.8" rx=".9" ry="1.4" fill="#fff" opacity=".45"/></svg>'
+  };
+  var PFHEART = '<svg class="heart" viewBox="2 3.5 20 18.5" aria-hidden="true"><path d="M12 21C5.8 16.7 2.6 13.2 2.6 9.5 2.6 6.7 4.8 4.5 7.5 4.5c1.9 0 3.5 1 4.5 2.6 1-1.6 2.6-2.6 4.5-2.6 2.7 0 4.9 2.2 4.9 5 0 3.7-3.2 7.2-9.4 11.5z" fill="#e5313d" stroke="#9c1c27" stroke-width="1"/><path d="M6.4 8.4c.6-1.3 1.8-1.8 2.9-1.5" fill="none" stroke="#fff" stroke-opacity=".75" stroke-width="1.6" stroke-linecap="round"/><circle cx="16.8" cy="8.6" r=".9" fill="#fff" fill-opacity=".55"/></svg>';
+  /* Palify-style panel: Material, Ingredient and any extra counters as "- icon 0 +" steppers, then the life box. */
+  function panelPF(p, i) {
+    var order = S.counters.filter(function (c) { return c.id === 'mat'; }).concat(S.counters.filter(function (c) { return c.id !== 'mat'; }));
+    var steps = order.map(function (c) {
+      var ic = PFI[c.id] || '<span class="cn">' + esc(c.name) + '</span>';
+      return '<div class="pfc">' +
+        '<button class="pfh l" data-a="cnt" data-p="' + i + '" data-c="' + c.id + '" data-d="-1" aria-label="Remove one ' + esc(c.name) + '"></button>' +
+        '<button class="pfh r" data-a="cnt" data-p="' + i + '" data-c="' + c.id + '" data-d="1" aria-label="Add one ' + esc(c.name) + '"></button>' +
+        '<span class="sg" aria-hidden="true">−</span><div class="mid">' + ic + '<output aria-live="polite">' + (p.vals[c.id] || 0) + '</output></div><span class="sg" aria-hidden="true">+</span></div>';
+    }).join('');
+    return '<section class="panel pf p' + i + ' pal-' + p.pal + (S.flip && i === 0 ? ' flip' : '') + '" aria-label="' + esc(p.name) + '">' +
+      '<div class="pfs">' + steps + '</div>' +
+      '<div class="pfl"><button class="pfh l" data-a="life" data-p="' + i + '" data-d="-1" aria-label="Lose 1 life"></button>' +
+      '<button class="pfh r" data-a="life" data-p="' + i + '" data-d="1" aria-label="Gain 1 life"></button>' +
+      '<span class="sg" aria-hidden="true">−</span><div class="mid">' + PFHEART + '<span class="lab">Life</span><output aria-live="polite" class="' + (p.life <= 5 ? 'low' : '') + '">' + p.life + '</output></div><span class="sg" aria-hidden="true">+</span></div></section>';
+  }
+  /* Palworldtcg.gg-style panel: Material, Life, Ingredient, then any extra counters, each as a column. */
+  function panelTG(p, i) {
+    var HEART = '<svg class="heart" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5C6 16.3 3 13 3 9.6 3 7 5 5 7.4 5c1.8 0 3.4 1 4.6 2.7C13.2 6 14.8 5 16.6 5 19 5 21 7 21 9.6c0 3.4-3 6.7-9 10.9z" fill="currentColor"/><path d="M7.2 8.2c.6-1 1.6-1.4 2.5-1.2" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="1.4" stroke-linecap="round"/></svg>';
+    function btn(a, c, d, txt, lab, cls) {
+      return '<button' + (cls ? ' class="' + cls + '"' : '') + ' data-a="' + a + '" data-p="' + i + '"' + (c ? ' data-c="' + c.id + '"' : '') + ' data-d="' + d + '" aria-label="' + esc(lab) + '">' + txt + '</button>';
+    }
+    function col(c) {
+      var k = c.id === 'mat' ? 'mat' : c.id === 'ing' ? 'ing' : 'gen';
+      return '<div class="tgc"><div class="tgbar top">' + btn('cnt', c, 1, '+', 'Add one ' + c.name) + btn('cnt', c, 3, '+3', 'Add three ' + c.name, 'p3') + '</div>' +
+        '<div class="tgv"><output aria-live="polite">' + (p.vals[c.id] || 0) + '</output><span class="disc d-' + k + '">' + ICONS[k] + '</span></div>' +
+        '<div class="tgbar bot">' + btn('cnt', c, -1, '−', 'Remove one ' + c.name) + '</div></div>';
+    }
+    var mat = S.counters.filter(function (c) { return c.id === 'mat'; }), rest = S.counters.filter(function (c) { return c.id !== 'mat'; });
+    var cols = mat.map(col).join('') +
+      '<div class="tgc tlife"><div class="tgbar top">' + btn('life', null, 1, '+', 'Gain 1 life') + '</div>' +
+      '<div class="tgv">' + HEART + '<output aria-live="polite" class="' + (p.life <= 5 ? 'low' : '') + '">' + p.life + '</output></div>' +
+      '<div class="tgbar bot">' + btn('life', null, -1, '−', 'Lose 1 life') + '</div></div>' + rest.map(col).join('');
+    return '<section class="panel tg p' + i + ' pal-' + p.pal + (S.flip && i === 0 ? ' flip' : '') + '">' +
+      '<div class="head"><input class="name" data-name="' + i + '" value="' + esc(p.name) + '" aria-label="Player ' + (i + 1) + ' name" maxlength="24"></div>' +
+      '<div class="tgrow">' + cols + '</div></section>';
+  }
   function panelHTML(p, i) {
     if (S.layout === 2) return panel2(p, i);
+    if (S.layout === 3) return panelPF(p, i);
+    if (S.layout === 4) return panelTG(p, i);
     var tiles = S.counters.map(function (c) {
       var k = c.id === 'mat' ? 'mat' : c.id === 'ing' ? 'ing' : 'gen';
       return '<div class="tcell"><div class="tokwrap"><div class="token d-' + k + '">' +
@@ -622,11 +837,16 @@ output { display: block; }
   }
 
   function renderBoard() {
-    $('turnInfo').innerHTML = '<svg class="moon' + (S.night ? '' : ' off') + '" viewBox="0 0 24 24" role="img" aria-label="Night"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1" opacity=".25"/><path d="M12 3A9 9 0 0 0 12 21A11 11 0 0 1 12 3Z" fill="currentColor"/></svg>' + '<button class="nightbtn" data-a="night" aria-pressed="' + S.night + '" aria-label="Night mode indicator"><span class="vt">Night</span></button>' + (S.horse ? '<svg class="horse" viewBox="0 0 48 48" role="img" aria-label="Horse armor"><path d="M10 44 L13 24 L17 12 L19 4 L24 11 L31 15 L39 25 L43 33 L41 38 L34 36 L29 33 L27 44 Z" fill="currentColor"/><path d="M22 10 L32 15 L40 26 L43 33 L38 31 L30 21 L23 16 Z" fill="none" stroke="var(--bg)" stroke-width="1.6" stroke-linejoin="round"/><path d="M26 17 L35 27" stroke="var(--bg)" stroke-width="1.4"/><circle cx="29" cy="24.5" r="1.7" fill="var(--bg)"/><circle cx="41" cy="31" r="1" fill="var(--bg)"/><circle cx="26.5" cy="14" r="1" fill="var(--bg)"/><path d="M14 30 L18 31 M15 36 L19 37 M13 24 L17 25" stroke="var(--bg)" stroke-width="1.4" stroke-linecap="round"/></svg>' : '');
+    /* Each layout has its own palette (root class); the Royal Horse Armor Pack overrides all of them. */
+    var LOOK = S.horse ? 'armor' : ['', 'jaybl', 'icarys', 'palify', 'tcg'][S.layout] || 'jaybl', PF = LOOK === 'palify';
+    if (PF) $('turnInfo').innerHTML = '<button class="pfnight" data-a="night" aria-pressed="' + S.night + '" aria-label="Night mode">' + (S.night
+        ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" fill="currentColor"/></svg><span>Night</span>'
+        : '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Day</span>') + '</button>';
+    else $('turnInfo').innerHTML = '<svg class="moon' + (S.night ? '' : ' off') + '" viewBox="0 0 24 24" role="img" aria-label="Night"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1" opacity=".25"/><path d="M12 3A9 9 0 0 0 12 21A11 11 0 0 1 12 3Z" fill="currentColor"/></svg>' + '<button class="nightbtn" data-a="night" aria-pressed="' + S.night + '" aria-label="Night mode indicator"><span class="vt">Night</span></button>' + (S.horse ? '<svg class="horse" viewBox="0 0 48 48" role="img" aria-label="Horse armor"><path d="M10 44 L13 24 L17 12 L19 4 L24 11 L31 15 L39 25 L43 33 L41 38 L34 36 L29 33 L27 44 Z" fill="currentColor"/><path d="M22 10 L32 15 L40 26 L43 33 L38 31 L30 21 L23 16 Z" fill="none" stroke="var(--bg)" stroke-width="1.6" stroke-linejoin="round"/><path d="M26 17 L35 27" stroke="var(--bg)" stroke-width="1.4"/><circle cx="29" cy="24.5" r="1.7" fill="var(--bg)"/><circle cx="41" cy="31" r="1" fill="var(--bg)"/><circle cx="26.5" cy="14" r="1" fill="var(--bg)"/><path d="M14 30 L18 31 M15 36 L19 37 M13 24 L17 25" stroke="var(--bg)" stroke-width="1.4" stroke-linecap="round"/></svg>' : '');
     $('turnInfo').setAttribute('aria-label', 'Night mode');
-    document.documentElement.classList.toggle('armor', !!S.horse);
+    ['armor', 'jaybl', 'icarys', 'palify', 'tcg'].forEach(function (k) { document.documentElement.classList.toggle(k, k === LOOK); });
     document.querySelectorAll('.cash').forEach(function (e) { e.classList.toggle('on', !!S.horse); });
-    var tc = document.querySelector('meta[name=theme-color]'); if (tc) tc.setAttribute('content', S.horse ? '#120d24' : '#0e1a1f');
+    var tc = document.querySelector('meta[name=theme-color]'); if (tc) tc.setAttribute('content', { armor: '#120d24', icarys: '#16141b', palify: '#081f3b', tcg: '#979b93' }[LOOK] || '#0e1a1f');
     $('undoBtn').disabled = hist.length === 0;
     paintRound();
     $('board').innerHTML = S.players.map(panelHTML).join('');
@@ -663,8 +883,8 @@ output { display: block; }
       }).join('') + '</div>';
     });
     part($('layouts'), String(S.layout || 1), function () {
-      return [1, 2].map(function (n) {
-        return '<button data-a="layout" data-l="' + n + '" aria-pressed="' + ((S.layout || 1) === n) + '">' + '<img src="' + LAYIMG[n - 1] + '" alt="" width="130" height="260"><span>' + ['jaybl\uD83E\uDE78\uD83E\uDE78d', 'Icarys'][n - 1] + '</span></button>';
+      return [1, 2, 3, 4].map(function (n) {
+        return '<button data-a="layout" data-l="' + n + '" aria-pressed="' + ((S.layout || 1) === n) + '">' + '<img src="' + LAYIMG[n - 1] + '" alt="" width="130" height="260"><span>' + ['jaybl\uD83E\uDE78\uD83E\uDE78d', 'Icarys', 'Palify', 'Palworldtcg.gg'][n - 1] + '</span></button>';
       }).join('');
     });
     part($('games'), games.length + '|' + (games.length ? games[0].t + '|' + games[games.length - 1].t : ''), function () {
@@ -894,7 +1114,7 @@ output { display: block; }
     } else if (a === 'night') {
       S.night = !S.night; SFX.spooky(S.night);
     } else if (a === 'layout') {
-      S.layout = +b.dataset.l === 2 ? 2 : 1;
+      S.layout = [1, 2, 3, 4].indexOf(+b.dataset.l) >= 0 ? +b.dataset.l : 1;
     } else if (a === 'dicestyle') {
       S.dstyle = b.dataset.st;
     } else if (a === 'dicecolor') {

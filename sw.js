@@ -6,7 +6,8 @@
    Change CACHE (palamo-v2, ...) only when a font or other non-page file is replaced under the same name;
    page releases do not need it. */
 var CACHE = 'palamo-v1';
-var CORE = ['./', 'fonts/dm-sans-latin-400-normal.woff2', 'fonts/dm-sans-latin-700-normal.woff2', 'fonts/bricolage-grotesque-latin-800-normal.woff2'];
+var CORE = ['./', 'fonts/dm-sans-latin-400-normal.woff2', 'fonts/dm-sans-latin-700-normal.woff2', 'fonts/bricolage-grotesque-latin-800-normal.woff2',
+  'fonts/fraunces-latin-600-normal.woff2', 'fonts/fraunces-latin-900-normal.woff2', 'fonts/hanken-grotesk-latin-400-normal.woff2', 'fonts/hanken-grotesk-latin-700-normal.woff2'];
 var PAGE_WAIT_MS = 3000;
 
 self.addEventListener('install', function (e) {
