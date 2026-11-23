@@ -393,6 +393,11 @@ output { display: block; }
 :root.tcg .rollcard { border-color: var(--line); }
 :root.tcg .newgame .btn.danger { color: #fff; }
 .evlink { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 48px; font-size: 1.05rem; text-decoration: none; color: var(--fg); }
+/* Refresh app link at the very bottom of the Menu */
+.refreshrow { margin: 0; text-align: center; }
+.linkbtn { min-height: 44px; padding: 0 12px; border: 0; background: transparent; color: var(--muted); font-size: .9rem; text-decoration: underline; text-underline-offset: 3px; }
+.linkbtn:hover { color: var(--fg); }
+.linkbtn:disabled { cursor: default; text-decoration: none; }
 /* Tournament bracket */
 #tsheet { z-index: 21; }
 .sheetin.wide { max-width: none; }
@@ -526,6 +531,7 @@ output { display: block; }
       <p class="hint legal">PAlamo™ and Remember the PAlamo™ © 2026 James Pyle. All rights reserved.</p>
     </section>
     <p class="hint" id="ver"></p>
+    <p class="refreshrow"><button type="button" class="linkbtn" data-a="refresh" id="refreshBtn">Refresh app</button></p>
   </div>
 </div>
 
@@ -1076,6 +1082,7 @@ output { display: block; }
   document.addEventListener('click', function (e) {
     var b = e.target.closest('[data-a]'); if (!b) return;
     var a = b.dataset.a, p = S.players[+b.dataset.p], d = +b.dataset.d;
+    if (a === 'refresh') { refreshApp(b); return; }
     if (a === 'menu') { $('sheet').hidden = false; renderMenu(); $('sheet').scrollTop = 0; return; }
     if (a === 'closemenu') { $('sheet').hidden = true; return; }
     if (a === 'rollclose') { $('roll').hidden = true; clearTimeout(rollTimer); return; }
@@ -1192,6 +1199,20 @@ output { display: block; }
   });
 
   function flush() { accrue(); save(); }
+  /* Refresh app (bottom of the Menu): save the game, get the newest page straight from the site (skipping the
+     browser's short-term cache), update the offline copy, then reload. With no connection it stays on the saved copy. */
+  function refreshApp(b) {
+    flush();
+    if (!('serviceWorker' in navigator) || location.protocol === 'file:') { location.reload(); return; }
+    b.disabled = true; b.textContent = 'Checking for the newest version\u2026';
+    navigator.serviceWorker.getRegistration().then(function (r) { return r ? r.update() : null; }).catch(function () {})
+      .then(function () { return fetch(location.pathname, { cache: 'reload' }); })
+      .then(function (res) { if (!res.ok) throw new Error('HTTP ' + res.status); location.reload(); })
+      .catch(function () {
+        b.textContent = 'No connection. Still on the saved copy (v' + APP_VERSION + ').';
+        setTimeout(function () { b.disabled = false; b.textContent = 'Refresh app'; }, 4000);
+      });
+  }
   document.addEventListener('visibilitychange', function () { if (document.hidden) flush(); });
   addEventListener('pagehide', flush);
 

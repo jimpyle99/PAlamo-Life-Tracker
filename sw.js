@@ -55,6 +55,8 @@ function page(e) {
 
 function asset(e) {
   var req = e.request;
+  /* "Refresh app" in the Menu asks with cache: 'reload': go to the network and save the fresh copy. */
+  if (req.cache === 'reload') return fetch(req).then(function (res) { return keep(e, req, res); });
   return caches.match(req).then(function (r) {
     return r || fetch(req).then(function (res) { return keep(e, req, res); });
   });
