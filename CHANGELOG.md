@@ -5,6 +5,14 @@ Versions before 1.0 were test builds (0.1.0 to 0.2.3).
 
 The running version is shown at the bottom of the in-app Menu and on the first line of every copied game log.
 
+## [2.9.0] - 2026-11-23
+### Added
+- **Hide timer** (Menu > Setup). Hides the round timer and its Start/Pause button, pauses the timer if it was running, and tries to hide the phone's clock:
+  - **Android:** the app goes full screen, which hides the status bar (clock, battery, signal). Browsers only allow full screen from a tap, so after the app is reopened it comes back on the first tap. A swipe from the top edge or Back leaves full screen; switching the option off and on brings it back.
+  - **iPhone, opened from the Home Screen icon:** the status bar is made see-through with white text, and a white band is drawn behind it so the clock can't be seen. An icon added before this version may need to be removed and added again.
+  - **iPhone in a Safari tab:** the clock stays. iPhone only lets videos go full screen, not web pages.
+- The setting stays on through New game and Undo.
+
 ## [2.8.0] - 2026-11-23
 ### Added
 - **Two new layouts, and every layout now has its own color palette.** Menu > Layout has four choices, shown in a 2×2 grid with updated previews:
